@@ -175,7 +175,7 @@ namespace EspacioPersonajes
             switch (DatosPersonaje.TipoPersonaje)
             {
                 case Tipo.delantero:
-                    indicePersonaje = random.Next(0, (nombresDelanteros.Length+1));
+                    indicePersonaje = random.Next(0, (nombresDelanteros.Length));
                     if ((DateTime.TryParseExact(fechaNacimientoDelanteros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux)))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -195,7 +195,7 @@ namespace EspacioPersonajes
 
                     break;
                 case Tipo.mediocampo:
-                    indicePersonaje = random.Next(0, (nombresMediocampos.Length+1));
+                    indicePersonaje = random.Next(0, (nombresMediocampos.Length));
                     if (DateTime.TryParseExact(fechasNacimientoMediocampos[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -214,7 +214,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Nivel = random.Next(1, 5);
                     break;
                 case Tipo.defensa:
-                    indicePersonaje = random.Next(0, (nombresDefensas.Length+1));
+                    indicePersonaje = random.Next(0, (nombresDefensas.Length));
                     if (DateTime.TryParseExact(fechasNacimientoDefensas[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -233,7 +233,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Nivel = random.Next(1, 5);
                     break;
                 case Tipo.arquero:
-                    indicePersonaje = random.Next(0, (nombresArqueros.Length+1));
+                    indicePersonaje = random.Next(0, (nombresArqueros.Length));
                     if (DateTime.TryParseExact(fechasNacimientoArqueros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
