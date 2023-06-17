@@ -8,14 +8,19 @@ namespace EspacioEquipos
         private Personaje mediocampo;
         private Personaje defensaOArquero;
         private int goles;
+        private string nombreEquipo;
 
         public Personaje Delantero { get => delantero; set => delantero = value; }
         public Personaje Mediocampo { get => mediocampo; set => mediocampo = value; }
         public Personaje DefensaOArquero { get => defensaOArquero; set => defensaOArquero = value; }
         public int Goles { get => goles; set => goles = value; }
+        public string NombreEquipo { get => nombreEquipo; set => nombreEquipo = value; }
 
         public string Mostrar(){
-            return("\n---------------------------DELANTERO----------------------------------\n"+this.delantero.Mostrar()+"\n---------------------------MEDIOCAMPO----------------------------------\n"+this.mediocampo.Mostrar()+"\n---------------------------DEFENSA O ARQUERO----------------------------------\n"+this.defensaOArquero.Mostrar());
+            return("\n=============================Equipo: "+this.NombreEquipo+"=======================\nDELANTERO: \n"+this.delantero.Mostrar()+"\nMEDIOCAMPO: \n"+this.mediocampo.Mostrar()+"\nDEFENSA O ARQUERO: \n"+this.defensaOArquero.Mostrar());
+        }
+        public string Nombre(){
+            return(nombreEquipo);
         }
 
     }

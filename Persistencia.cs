@@ -10,7 +10,7 @@ namespace EspacioPersistenciaDeDatos
     class PersonajesJSON
     {
         public void GuardarPersonajes(List<Equipos> equipos, string rutaArchivo){
-            FileStream archivo = new FileStream(rutaArchivo,FileMode.Create);
+            FileStream archivo = new FileStream(rutaArchivo,FileMode.OpenOrCreate);
             var serializado = JsonSerializer.Serialize(equipos);
             using (var strWriter = new StreamWriter(archivo))
             {
@@ -36,7 +36,7 @@ namespace EspacioPersistenciaDeDatos
                 using (var strReader = new StreamReader(archivo))
                 {
                     string lineas = strReader.ReadToEnd();
-                    if (lineas!=null)
+                    if (lineas!="")
                     {
                         return(true);
                     }else
