@@ -14,10 +14,22 @@ namespace EspacioPersonajes
         return(datosPersonaje.Nombre);
     }
     public double Ataque(double efectividad){
-        return((caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro)+(100/efectividad)*caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro));
+        return((caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro)+(efectividad/100)*caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro));
     }
     public double Defensa(double efectividad){
-        return((caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje)+(100/(1-efectividad))*caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje));
+        return((caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje)+(efectividad/100)*caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje));
+    }
+    public void AumentaCaracteristicas(int factor){
+        caracteristicasPersonaje.Control+=factor;
+        caracteristicasPersonaje.Intercepciones+=factor;
+        caracteristicasPersonaje.Tiro+=factor;
+        caracteristicasPersonaje.Marcaje+=factor;
+    }
+    public void DisminuyeCaracteristicas(int factor){
+        caracteristicasPersonaje.Control-=factor;
+        caracteristicasPersonaje.Intercepciones-=factor;
+        caracteristicasPersonaje.Tiro-=factor;
+        caracteristicasPersonaje.Marcaje-=factor;
     }
     }
     

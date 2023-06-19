@@ -22,6 +22,26 @@ namespace EspacioEquipos
         public string Nombre(){
             return(nombreEquipo);
         }
-
+        public int GolesMarcados(){
+            return(goles);
+        }
+        public void aumentaNivel(){
+            delantero.CaracteristicasPersonaje.Nivel+=1;
+            mediocampo.CaracteristicasPersonaje.Nivel+=1;
+            defensaOArquero.CaracteristicasPersonaje.Nivel+=1;
+        }
+        public void AumentaEstadisticas(int factor){
+            delantero.AumentaCaracteristicas(factor);
+            mediocampo.AumentaCaracteristicas(factor);
+            defensaOArquero.AumentaCaracteristicas(factor);
+        }
+        public void DisminuyeEstadisticas(int factor){
+            delantero.DisminuyeCaracteristicas(factor);
+            mediocampo.DisminuyeCaracteristicas(factor);
+            defensaOArquero.DisminuyeCaracteristicas(factor);
+        }
+        public void ReestableceGoles(){
+            Goles =0;
+        }
     }
 }

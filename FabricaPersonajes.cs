@@ -191,7 +191,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Tiro = random.Next(5, 10);
                     CaracteristicasPersonaje.Intercepciones = random.Next(1, 5);
                     CaracteristicasPersonaje.Marcaje = random.Next(1, 5);
-                    CaracteristicasPersonaje.Nivel = random.Next(1, 5);
+                    CaracteristicasPersonaje.Nivel = 1;
 
                     break;
                 case Tipo.mediocampo:
@@ -211,7 +211,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Tiro = random.Next(1, 10);
                     CaracteristicasPersonaje.Intercepciones = random.Next(1, 10);
                     CaracteristicasPersonaje.Marcaje = random.Next(1, 10);
-                    CaracteristicasPersonaje.Nivel = random.Next(1, 5);
+                    CaracteristicasPersonaje.Nivel = 1;
                     break;
                 case Tipo.defensa:
                     indicePersonaje = random.Next(0, (nombresDefensas.Length));
@@ -230,7 +230,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Tiro = random.Next(1, 5);
                     CaracteristicasPersonaje.Intercepciones = random.Next(5, 10);
                     CaracteristicasPersonaje.Marcaje = random.Next(5, 10);
-                    CaracteristicasPersonaje.Nivel = random.Next(1, 5);
+                    CaracteristicasPersonaje.Nivel = 1;
                     break;
                 case Tipo.arquero:
                     indicePersonaje = random.Next(0, (nombresArqueros.Length));
@@ -249,7 +249,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Tiro = random.Next(1, 5);
                     CaracteristicasPersonaje.Intercepciones = random.Next(5, 10);
                     CaracteristicasPersonaje.Marcaje = random.Next(5, 10);
-                    CaracteristicasPersonaje.Nivel = random.Next(1, 5);
+                    CaracteristicasPersonaje.Nivel = 1;
                     break;
                 default:
                     break;
