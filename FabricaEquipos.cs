@@ -54,7 +54,7 @@ namespace EspacioEquipos
       // Puedes agregar más nombres de equipos si lo deseas
   };
 
-        public Equipos CreadorEquipos()
+        public Equipos CreadorEquipos(List<Personaje> ListadoJugadores)
         {
             var equipoCreado = new Equipos();
             var rand = new Random();
@@ -65,9 +65,35 @@ namespace EspacioEquipos
             equipoCreado.Delantero = creadorPersonajes.CrearPersonaje(4);
             equipoCreado.Mediocampo = creadorPersonajes.CrearPersonaje(3);
             equipoCreado.DefensaOArquero = creadorPersonajes.CrearPersonaje(rand.Next(1, 3));
+            while (EncuentraIgualNombre(ListadoJugadores, equipoCreado.Delantero))
+            {
+                equipoCreado.Delantero = creadorPersonajes.CrearPersonaje(4);
+            }
+            while (EncuentraIgualNombre(ListadoJugadores, equipoCreado.Mediocampo))
+            {
+            equipoCreado.Mediocampo = creadorPersonajes.CrearPersonaje(3);
+            }
+            while (EncuentraIgualNombre(ListadoJugadores, equipoCreado.DefensaOArquero))
+            {
+            equipoCreado.DefensaOArquero = creadorPersonajes.CrearPersonaje(2);
+            }
             equipoCreado.Goles = 0;
             equipoCreado.NombreEquipo = equipos[rand.Next(0,equipos.Length)];
+            ListadoJugadores.Add(equipoCreado.Delantero);
+            ListadoJugadores.Add(equipoCreado.DefensaOArquero);
+            ListadoJugadores.Add(equipoCreado.Mediocampo);
             return (equipoCreado);
+        }
+        private bool EncuentraIgualNombre(List<Personaje> listaPersonajes, Personaje personajeCreado){
+            bool encontrado = false;
+            foreach (var personaje in listaPersonajes)
+            {
+                if (personaje.Nombre() == personajeCreado.Nombre())
+                {
+                    encontrado=true;
+                }
+            }
+            return(encontrado);
         }
     }
 }

@@ -217,9 +217,9 @@ internal class Program
         Console.WriteLine("\n....................................................................................\n");
         Console.WriteLine("\t\t\t---Equipo2:" + equipo2.Nombre() + "\n");
         Console.WriteLine(equipo2.Mostrar());
-        Console.WriteLine("\n\nAtaca "+equipo1.Nombre()+ ", Defiende"+equipo2.Nombre());
+        Console.WriteLine("\n\nAtaca " + equipo1.Nombre() + ", Defiende" + equipo2.Nombre());
         JuegaJugadaDelanteroVsDefensa(equipo1, equipo2);
-        Console.WriteLine("\n\nAtaca "+equipo2.Nombre()+ ", Defiende"+equipo1.Nombre());
+        Console.WriteLine("\n\nAtaca " + equipo2.Nombre() + ", Defiende" + equipo1.Nombre());
         JuegaJugadaDelanteroVsDefensa(equipo2, equipo1);
         Console.WriteLine("\n\nSe enfrentan mediocampos");
         JuegaJugadaMediocampoVsMediocampo(equipo1, equipo2);
@@ -242,26 +242,26 @@ internal class Program
                 Console.WriteLine("\n\nDESEMPATE:  Se busca un reemplzo");
                 while (equipo1.GolesMarcados() == equipo2.GolesMarcados())
                 {
-                    Console.WriteLine("Resultado Parcial:  "+equipo1.Nombre()+ " "+equipo1.GolesMarcados()+" - "+equipo2.Nombre()+" "+equipo2.GolesMarcados());
+                    Console.WriteLine("Resultado Parcial:  " + equipo1.Nombre() + " " + equipo1.GolesMarcados() + " - " + equipo2.Nombre() + " " + equipo2.GolesMarcados());
                     Console.WriteLine("Presiona una tecla para dar indicaciones aleatorias al equipo: Si las indicaciones son:\n\tMuy buenas → aumentan en 2 todas las estadisticas de tus jugadores\n\tBuenas →aumentan en 1 todas las estadísticas de tus jugadores\n\tNeutrales, no modifcan el juego de tus jugadores\n\tMalas → Disminuyen 1 las estadisticas de tus jugadores\n\tMuy malas → Disminuyenn 2 puntos las estadisticas de tus jugadores");
                     avanzar = Console.ReadLine();
-                    factor = rand.Next(1,3);
-                    aumentaONo = rand.Next(0,3);
+                    factor = rand.Next(1, 3);
+                    aumentaONo = rand.Next(0, 3);
                     switch (aumentaONo)
                     {
                         case 0:
                             Console.WriteLine("No se modifican las estadisticas de tus jugadores");
-                        break;
+                            break;
                         case 1:
-                            Console.WriteLine("Buenas indicaciones, aumentan las estadisticas de tus jugadores en un factor: "+factor);
+                            Console.WriteLine("Buenas indicaciones, aumentan las estadisticas de tus jugadores en un factor: " + factor);
                             equipo1.AumentaEstadisticas(factor);
-                        break;
+                            break;
                         case 2:
-                            Console.WriteLine("Malas indicaciones, disminuyen las estadisticas de tus jugadores en un factor "+ factor);
+                            Console.WriteLine("Malas indicaciones, disminuyen las estadisticas de tus jugadores en un factor " + factor);
                             equipo2.DisminuyeEstadisticas(factor);
-                        break;
+                            break;
                         default:
-                        break;
+                            break;
                     }
                     JuegaJugadaDelanteroVsDefensa(equipo1, equipo2);
                     JuegaJugadaDelanteroVsDefensa(equipo2, equipo1);
@@ -292,6 +292,7 @@ internal class Program
         var creadorEquipos = new FabricaEquipos();
         string nombreArchivo = @"personajesJSON.json";
         List<Equipos> listadoEquipos = new List<Equipos>();
+        var listadoJugadores = new List<Personaje>();
         if (persistencia.Existe(nombreArchivo))
         {
             listadoEquipos = persistencia.LeerPersonajes(nombreArchivo);
@@ -301,18 +302,25 @@ internal class Program
             var Equipo = new Equipos();
             for (int i = 0; i < 10; i++)
             {
-                Equipo = creadorEquipos.CreadorEquipos();
+                Equipo = creadorEquipos.CreadorEquipos(listadoJugadores);
                 foreach (var eq in listadoEquipos)
                 {
                     while (eq.Nombre() == Equipo.Nombre())
                     {
-                        Equipo = creadorEquipos.CreadorEquipos();
+                        listadoJugadores.Remove(Equipo.Delantero);
+                        listadoJugadores.Remove(Equipo.DefensaOArquero);
+                        listadoJugadores.Remove(Equipo.Mediocampo);
+                        Equipo = creadorEquipos.CreadorEquipos(listadoJugadores);
                     }
                 }
                 listadoEquipos.Add(Equipo);
+                // listadoJugadores.Add(Equipo.Delantero);
+                // listadoJugadores.Add(Equipo.DefensaOArquero);
+                // listadoJugadores.Add(Equipo.Mediocampo);
             }
             persistencia.GuardarPersonajes(listadoEquipos, nombreArchivo);
         }
+
         Console.WriteLine("\tSe asignaran 2 equipos, los cuales jugarán entre ellos. Serán 3 enfrentamientos: Delantero vs Defensa o Arquero, Defensa o Arquero vs Delantero, Mediocampo vs Mediocampo. Cada enfrentamiento, será una jugada al azar, pueden ser jugadas de mucho o poco peligro, las cuales influirán en la efectividad o probabilidad de meter gol para el equipo que ataca, las jugadas mas efectivas, aumentarán mas el ataque que la defensa y las menos efectivas aumentaran mas la defensa que el ataque. Se realizarán 3 jugadas. En caso de empate, cada jugador tendrá una jugada de ataque, una de defensa y un enfrentamiento entre mediocampos hasta que uno marque y el otro falle que se terminará el partido. A medida que se van produciendo empates, tu equipo recibirá una indicacion del entrenador que puede mejorar, disminuir o no modificar las estadistcas de los jugadores. El ganador, será el equipo que termina con más goles. Cuando un equipo gana, pasa a jugar la siguiente ronda, pero con un aumento de nivel que aumentara las posibilidades de ganar. El juego termina cuando un equipo vence a todos los equipos de la lista");
         Console.WriteLine("\n=========================================EQUIPOS=====================================\n");
         int k = 1;
@@ -343,19 +351,19 @@ internal class Program
         {
             eq1 = rand.Next(0, 10);
         }
-        Equipos equipo1 = listadoEquipos[eq1-1];
+        Equipos equipo1 = listadoEquipos[eq1 - 1];
         listadoEquipos.Remove(equipo1);
         int eq2 = rand.Next(0, listadoEquipos.Count());
         while (eq2 == eq1)
         {
-            eq2 = rand.Next(0,listadoEquipos.Count());
+            eq2 = rand.Next(0, listadoEquipos.Count());
         }
         eq2 = rand.Next(0, (listadoEquipos.Count()));
         Equipos equipo2 = listadoEquipos[eq2];
         listadoEquipos.Remove(equipo2);
 
         Equipos ganador = JuegaPartida(equipo1, equipo2);
-        while (ganador == equipo1 && listadoEquipos.Count()>0)
+        while (ganador == equipo1 && listadoEquipos.Count() > 0)
         {
             Console.WriteLine("\n\n");
             equipo1.ReestableceGoles();
@@ -363,14 +371,15 @@ internal class Program
             equipo2 = listadoEquipos[eq2];
             listadoEquipos.Remove(equipo2);
 
-            ganador=JuegaPartida(equipo1,equipo2);
+            ganador = JuegaPartida(equipo1, equipo2);
             ganador.aumentaNivel();
         }
-        if (listadoEquipos.Count()==0)
+        if (listadoEquipos.Count() == 0)
         {
             Console.WriteLine("\nGANADOR!");
             Console.WriteLine(equipo1.Mostrar());
-        }else
+        }
+        else
         {
             Console.WriteLine("\nPerdiste!!");
         }

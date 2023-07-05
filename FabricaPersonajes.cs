@@ -18,7 +18,7 @@ namespace EspacioPersonajes
         "Hugo Sánchez",
         "Radamel Falcao",
         "Alessandro Del Piero",
-        "Sergio Agüero",
+        "Sergio Aguero",
         "Javier Hernández",
         "Giacomo Bulgarelli",
         "Christian Vieri",
@@ -71,7 +71,9 @@ namespace EspacioPersonajes
     "Paul Pogba",
     "N'Golo Kanté",
     "Frenkie de Jong",
-    "Christian Eriksen"
+    "Christian Eriksen",
+    "Bruno Fernandes", 
+    "Marco Verratti"
     // Agrega más nombres de mediocampistas aquí
 };
 
@@ -84,7 +86,9 @@ namespace EspacioPersonajes
     "El Pogboom",
     "La Roca",
     "El Salvador",
-    "El Genio"
+    "El Genio", 
+    "Bruno", 
+    "Il Professore" 
     // Agrega más apodos de mediocampistas aquí
 };
 
@@ -97,7 +101,9 @@ namespace EspacioPersonajes
     "15-03-1993",
     "29-03-1991",
     "12-05-1997",
-    "14-02-1992"
+    "14-02-1992", 
+    "08/09/1994",
+     "05/11/1992"
     // Agrega más fechas de nacimiento de mediocampistas aquí
 };
         public static string[] nombresArqueros = {
@@ -110,11 +116,16 @@ namespace EspacioPersonajes
 };
 
         public static string[] nombresDefensas = {
-    "Sergio Ramos",
-    "Virgil van Dijk",
-    "Raphael Varane",
-    "Kalidou Koulibaly",
-    "Trent Alexander-Arnold"
+            "Sergio Ramos", 
+            "Giorgio Chiellini",
+            "Virgil van Dijk",
+            "Kalidou Koulibaly",
+            "Aymeric Laporte",
+            "Leonardo Bonucci", 
+            "Raphael Varane", 
+            "Trent Alexander-Arnold", 
+            "Andrew Robertson", 
+            "Stefan de Vrij"
     // Agrega más nombres de defensas aquí
 };
 
@@ -128,11 +139,16 @@ namespace EspacioPersonajes
 };
 
         public static string[] apodosDefensas = {
-    "El Comandante",
-    "El Coloso",
-    "El Francotirador",
-    "El León de Senegal",
-    "El Cohete"
+    "El Capitán",
+     "Il Gladiatore", 
+     "The Rock", 
+     "KK", 
+     "The Wall",
+    "BonBon", 
+    "Varane", 
+    "TAA", 
+    "Robbo", 
+    "The Iceman"
     // Agrega más apodos de defensas aquí
 };
 
@@ -146,11 +162,16 @@ namespace EspacioPersonajes
 };
 
         public static string[] fechasNacimientoDefensas = {
-    "30-03-1986",
-    "08-07-1991",
-    "25-04-1993",
-    "20-06-1991",
-    "07-10-1998"
+    "30/03/1986", 
+    "14/08/1984", 
+    "08/07/1991", 
+    "20/06/1991", 
+    "27/05/1994",
+    "01/05/1987", 
+    "25/04/1993", 
+    "07/10/1998", 
+    "11/03/1994", 
+    "05/02/1992"
     // Agrega más fechas de nacimiento de defensas aquí
 };
         public Personaje CrearPersonaje(int posicionIngresada)
@@ -162,9 +183,9 @@ namespace EspacioPersonajes
             int indicePersonaje;
             var fechaAux = new DateTime();
             Tipo posicion = (Tipo)posicionIngresada;
-            if (posicionIngresada>0 && posicionIngresada<=4)
+            if (posicionIngresada > 0 && posicionIngresada <= 4)
             {
-                DatosPersonaje.TipoPersonaje = (Tipo) posicion;
+                DatosPersonaje.TipoPersonaje = (Tipo)posicion;
             }
             else
             {
@@ -175,7 +196,7 @@ namespace EspacioPersonajes
             switch (DatosPersonaje.TipoPersonaje)
             {
                 case Tipo.delantero:
-                    indicePersonaje = random.Next(0, (nombresDelanteros.Length));
+                    indicePersonaje = random.Next(0, (nombresDelanteros.Length-1));
                     if ((DateTime.TryParseExact(fechaNacimientoDelanteros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux)))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -195,7 +216,7 @@ namespace EspacioPersonajes
 
                     break;
                 case Tipo.mediocampo:
-                    indicePersonaje = random.Next(0, (nombresMediocampos.Length));
+                    indicePersonaje = random.Next(0, (nombresMediocampos.Length-1));
                     if (DateTime.TryParseExact(fechasNacimientoMediocampos[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -214,7 +235,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Nivel = 1;
                     break;
                 case Tipo.defensa:
-                    indicePersonaje = random.Next(0, (nombresDefensas.Length));
+                    indicePersonaje = random.Next(0, (nombresDefensas.Length-1));
                     if (DateTime.TryParseExact(fechasNacimientoDefensas[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -233,7 +254,7 @@ namespace EspacioPersonajes
                     CaracteristicasPersonaje.Nivel = 1;
                     break;
                 case Tipo.arquero:
-                    indicePersonaje = random.Next(0, (nombresArqueros.Length));
+                    indicePersonaje = random.Next(0, (nombresArqueros.Length-1));
                     if (DateTime.TryParseExact(fechasNacimientoArqueros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
                     {
                         DatosPersonaje.FechaNacimiento = fechaAux;
@@ -255,7 +276,7 @@ namespace EspacioPersonajes
                     break;
 
             }
-            DatosPersonaje.Edad=CalculaEdad(DatosPersonaje.FechaNacimiento);
+            DatosPersonaje.Edad = CalculaEdad(DatosPersonaje.FechaNacimiento);
             personajeCreado.DatosPersonaje = new Datos();
             personajeCreado.DatosPersonaje = DatosPersonaje;
             personajeCreado.CaracteristicasPersonaje = new Caracteristicas();
@@ -273,8 +294,8 @@ namespace EspacioPersonajes
         private int CalculaEdad(DateTime fechaNacimiento)
         {
             DateTime fechaHoy = DateTime.Now;
-            TimeSpan diasTotales = fechaHoy-fechaNacimiento;
-            int edad =(int)diasTotales.Days/365;
+            TimeSpan diasTotales = fechaHoy - fechaNacimiento;
+            int edad = (int)diasTotales.Days / 365;
             return (edad);
         }
     }
