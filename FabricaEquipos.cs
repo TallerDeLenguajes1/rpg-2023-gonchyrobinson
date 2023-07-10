@@ -53,6 +53,53 @@ namespace EspacioEquipos
     "Besiktas"
       // Puedes agregar más nombres de equipos si lo deseas
   };
+ private string[] areas = new string[]
+{
+    "Spain",                // Real Madrid
+    "Spain",                // Barcelona
+    "England",              // Manchester United
+    "Germany",              // Bayern Munich
+    "Italy",                // Juventus
+    "France",               // Paris Saint-Germain
+    "England",              // Liverpool
+    "England",              // Manchester City
+    "England",              // Chelsea
+    "Spain",                // Atletico Madrid
+    "Italy",                // Inter Milan
+    "Italy",                // AC Milan
+    "England",              // Arsenal
+    "England",              // Tottenham Hotspur
+    "Germany",              // Borussia Dortmund
+    "Netherlands",          // Ajax
+    "Italy",                // Roma
+    "Italy",                // Napoli
+    "Portugal",             // Benfica
+    "Portugal",             // Porto
+    "Spain",                // Sevilla
+    "Spain",                // Valencia
+    "France",               // Marseille
+    "France",               // Lyon
+    "Argentina",            // Boca Juniors
+    "Argentina",            // River Plate
+    "Brazil",               // Sao Paulo
+    "Brazil",               // Flamengo
+    "Brazil",               // Corinthians
+    "Brazil",               // Palmeiras
+    "Brazil",               // Cruzeiro
+    "Brazil",               // Santos
+    "Brazil",               // Vasco da Gama
+    "Brazil",               // Gremio
+    "Switzerland",          // Grasshopper Club Zurich
+    "Netherlands",          // Feyenoord
+    "Netherlands",          // PSV Eindhoven
+    "Belgium",              // Anderlecht
+    "Belgium",              // Club Brugge
+    "Scotland",             // Celtic
+    "Scotland",             // Rangers
+    "Turkey",               // Galatasaray
+    "Turkey",               // Fenerbahce
+    "Turkey"                // Besiktas
+};
 
         public Equipos CreadorEquipos(List<Personaje> ListadoJugadores)
         {
@@ -78,7 +125,9 @@ namespace EspacioEquipos
             equipoCreado.DefensaOArquero = creadorPersonajes.CrearPersonaje(2);
             }
             equipoCreado.Goles = 0;
-            equipoCreado.NombreEquipo = equipos[rand.Next(0,equipos.Length)];
+            var indice = rand.Next(0,equipos.Length);
+            equipoCreado.NombreEquipo = equipos[indice];
+            equipoCreado.Area=areas[indice];
             ListadoJugadores.Add(equipoCreado.Delantero);
             ListadoJugadores.Add(equipoCreado.DefensaOArquero);
             ListadoJugadores.Add(equipoCreado.Mediocampo);

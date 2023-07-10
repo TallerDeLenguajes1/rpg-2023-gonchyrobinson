@@ -14,7 +14,6 @@ namespace EspacioPersonajes
         "Alfredo Di Stéfano",
         "Edinson Cavani",
         "Carlos Tevez",
-        "Juan Román Riquelme",
         "Hugo Sánchez",
         "Radamel Falcao",
         "Alessandro Del Piero",
@@ -162,16 +161,16 @@ namespace EspacioPersonajes
 };
 
         public static string[] fechasNacimientoDefensas = {
-    "30/03/1986", 
-    "14/08/1984", 
-    "08/07/1991", 
-    "20/06/1991", 
-    "27/05/1994",
-    "01/05/1987", 
-    "25/04/1993", 
-    "07/10/1998", 
-    "11/03/1994", 
-    "05/02/1992"
+    "30-03-1986", 
+    "14-08-1984", 
+    "08-07-1991", 
+    "20-06-1991", 
+    "27-05-1994",
+    "01-05-1987", 
+    "25-04-1993", 
+    "07-10-1998", 
+    "11-03-1994", 
+    "05-02-1992"
     // Agrega más fechas de nacimiento de defensas aquí
 };
         public Personaje CrearPersonaje(int posicionIngresada)

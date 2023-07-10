@@ -11,16 +11,16 @@ namespace EspacioPersonajes
  
    
     public string Mostrar(){
-            return("Datos: \n\tNombre:  "+DatosPersonaje.Nombre+"\n\tApodo:  "+DatosPersonaje.Apodo + "\n\tFecha de Nacimiento:   "+ DatosPersonaje.FechaNacimiento.ToShortDateString()+"\n\tEdad:  "+DatosPersonaje.Edad+"\nCaracteristicas: \n\tTiro:  "+CaracteristicasPersonaje.Tiro+"\n\tControl:  "+CaracteristicasPersonaje.Control+"\n\tMarcaje:  "+CaracteristicasPersonaje.Marcaje+"\n\tIntercepciones:  "+CaracteristicasPersonaje.Intercepciones+"\n\tNivel:  "+CaracteristicasPersonaje.Nivel);
+            return("\tDatos: \n\t\tNombre: "+DatosPersonaje.Nombre+"\tApodo:  "+DatosPersonaje.Apodo + "\tFecha de Nacimiento: "+ DatosPersonaje.FechaNacimiento.ToShortDateString()+"\tEdad: "+DatosPersonaje.Edad+"\n\tCaracteristicas: \n\t\tTiro: "+CaracteristicasPersonaje.Tiro+"\tControl: "+CaracteristicasPersonaje.Control+"\tMarcaje: "+CaracteristicasPersonaje.Marcaje+"\tIntercepciones: "+CaracteristicasPersonaje.Intercepciones+"\tNivel: "+CaracteristicasPersonaje.Nivel);
         }
     public string Nombre(){
         return(datosPersonaje.Nombre);
     }
     public double Ataque(double efectividad){
-        return((caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro)+(efectividad/100)*caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro));
+        return((caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro)+(efectividad/100)*(caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro)+caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Control+caracteristicasPersonaje.Tiro)/10);
     }
     public double Defensa(double efectividad){
-        return((caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje)+(efectividad/100)*caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje));
+        return((caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje)+(efectividad/100)*(caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje)+caracteristicasPersonaje.Nivel*(caracteristicasPersonaje.Intercepciones+caracteristicasPersonaje.Marcaje)/10);
     }
     public void AumentaCaracteristicas(int factor){
         caracteristicasPersonaje.Control+=factor;
