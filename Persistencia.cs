@@ -62,9 +62,10 @@ namespace EspacioPersistenciaDeDatos
             request.Method = "GET";
             request.ContentType = "application/json";
             request.Accept = "application/json";
-            string token = "c139f9a526184b62b0667a46dd8855f1"; // Reemplaza "tu_token" con tu token real
+            //Cargo la token de la API, de manera de poder usarla mas veces por dia
+            string token = "c139f9a526184b62b0667a46dd8855f1"; 
             request.Headers.Add("X-Auth-Token", token);
-            Competencias? datosLeidos = null;
+            Competencias? datosLeidos = new Competencias();
             try
             {
                 using (WebResponse response = request.GetResponse())
@@ -83,6 +84,17 @@ namespace EspacioPersistenciaDeDatos
             catch (WebException ex)
             {
                 Console.WriteLine("Problemas de acceso a la API");
+                // Creo un caso predeterminado para cuando tenga un error de acceso a la API
+                datosLeidos.count=1;
+                Competition competenciasAux=new Competition();
+                List<Competition> ListaCompetenciasAux = new List<Competition>();
+                Area area = new Area();
+                competenciasAux.area=area;
+                competenciasAux.area.name="England";
+                competenciasAux.name="Premier League";
+                competenciasAux.type="LEAGUE";
+                ListaCompetenciasAux.Add(competenciasAux);
+                datosLeidos.competitions=ListaCompetenciasAux;
             }
             return (datosLeidos);
         }

@@ -109,9 +109,12 @@ namespace EspacioEquipos
             equipoCreado.Delantero = new Personaje();
             equipoCreado.Mediocampo = new Personaje();
             equipoCreado.DefensaOArquero = new Personaje();
+            //Creo un equipo con 1 delantero, 1 mediocampo y un defensa o arquero. Delanteros se representan con 4, mediocampos con 3, defensas con 2 y arqueros con 1
             equipoCreado.Delantero = creadorPersonajes.CrearPersonaje(4);
             equipoCreado.Mediocampo = creadorPersonajes.CrearPersonaje(3);
             equipoCreado.DefensaOArquero = creadorPersonajes.CrearPersonaje(rand.Next(1, 3));
+
+            //Esta funcion recorre la lista de jugadores y verifica que no esté repetido. Si lo está, no agrega el personaje creado al equipo, sino que crea un nuevo jugador hasta que no esté repetido
             while (EncuentraIgualNombre(ListadoJugadores, equipoCreado.Delantero))
             {
                 equipoCreado.Delantero = creadorPersonajes.CrearPersonaje(4);
@@ -125,12 +128,19 @@ namespace EspacioEquipos
             equipoCreado.DefensaOArquero = creadorPersonajes.CrearPersonaje(2);
             }
             equipoCreado.Goles = 0;
+            //Equipos es un arreglo que contiene los nombres de los equipos que pueden aparecer el juego y ares contiene las areas. Es importante destacar que las areas de los equipos, coinciden con el campo de areas de la API, porque este detalle se usa en el juego
             var indice = rand.Next(0,equipos.Length);
+
+            //Hago coincidir los Nombres con sus areas
             equipoCreado.NombreEquipo = equipos[indice];
             equipoCreado.Area=areas[indice];
+
+            //Agrego los jugadores a la lista de jugadores de manera de que en el proximo equipo, no puedan estar repetidos
             ListadoJugadores.Add(equipoCreado.Delantero);
             ListadoJugadores.Add(equipoCreado.DefensaOArquero);
             ListadoJugadores.Add(equipoCreado.Mediocampo);
+
+            //Retorno el equipo creado
             return (equipoCreado);
         }
         private bool EncuentraIgualNombre(List<Personaje> listaPersonajes, Personaje personajeCreado){
