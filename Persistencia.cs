@@ -55,7 +55,7 @@ namespace EspacioPersistenciaDeDatos
                 return (false);
             }
         }
-        public Competencias GetCompetencias()
+        public CompetitionGroup GetCompetencias()
         {
             var url = $"http://api.football-data.org/v4/competitions/";
             var request = (HttpWebRequest)WebRequest.Create(url);
@@ -65,7 +65,7 @@ namespace EspacioPersistenciaDeDatos
             //Cargo la token de la API, de manera de poder usarla mas veces por dia
             string token = "c139f9a526184b62b0667a46dd8855f1"; 
             request.Headers.Add("X-Auth-Token", token);
-            Competencias? datosLeidos = new Competencias();
+            CompetitionGroup? datosLeidos = new CompetitionGroup();
             try
             {
                 using (WebResponse response = request.GetResponse())
@@ -76,7 +76,7 @@ namespace EspacioPersistenciaDeDatos
                         using (StreamReader objReader = new StreamReader(strReader))
                         {
                             string datosString = objReader.ReadToEnd();
-                            datosLeidos = JsonSerializer.Deserialize<Competencias>(datosString);
+                            datosLeidos = JsonSerializer.Deserialize<CompetitionGroup>(datosString);
                         }
                     }
                 }

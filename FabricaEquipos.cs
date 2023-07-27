@@ -136,9 +136,9 @@ namespace EspacioEquipos
             equipoCreado.Area=areas[indice];
 
             //Agrego los jugadores a la lista de jugadores de manera de que en el proximo equipo, no puedan estar repetidos
-            ListadoJugadores.Add(equipoCreado.Delantero);
-            ListadoJugadores.Add(equipoCreado.DefensaOArquero);
-            ListadoJugadores.Add(equipoCreado.Mediocampo);
+            ListadoJugadores.AddRange(equipoCreado.GetAllJugadores());
+            //ListadoJugadores.Add(equipoCreado.DefensaOArquero);
+            //ListadoJugadores.Add(equipoCreado.Mediocampo);
 
             //Retorno el equipo creado
             return (equipoCreado);

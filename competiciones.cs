@@ -56,7 +56,7 @@ namespace EspacioEquipos
     {
     }
 
-    public class Competencias
+    public class CompetitionGroup
     {
         public int? count { get; set; }
         public Filters? filters { get; set; }

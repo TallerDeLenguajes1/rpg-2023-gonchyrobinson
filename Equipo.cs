@@ -18,6 +18,15 @@ namespace EspacioEquipos
         public string NombreEquipo { get => nombreEquipo; set => nombreEquipo = value; }
         public string Area { get => area; set => area = value; }
 
+        public List<Personaje> GetAllJugadores()
+        {
+            var Jugadores = new List<Personaje>();
+            Jugadores.Add(Delantero);
+            Jugadores.Add(Mediocampo);
+            Jugadores.Add(DefensaOArquero);
+            return Jugadores;
+        }
+
         public string Mostrar(){
             return("\n=============================Equipo: "+this.NombreEquipo+"=======================\nPAIS: "+this.area+"\nDELANTERO: \n"+this.delantero.Mostrar()+"\nMEDIOCAMPO: \n"+this.mediocampo.Mostrar()+"\nDEFENSA O ARQUERO: \n"+this.defensaOArquero.Mostrar());
         }

@@ -182,7 +182,7 @@ namespace EspacioPersonajes
             int indicePersonaje;
             var fechaAux = new DateTime();
             Tipo posicion = (Tipo)posicionIngresada;
-            if (posicionIngresada > 0 && posicionIngresada <= 4)
+            if (isValidPosition(posicionIngresada))
             {
                 DatosPersonaje.TipoPersonaje = (Tipo)posicion;
             }
@@ -195,93 +195,123 @@ namespace EspacioPersonajes
             switch (DatosPersonaje.TipoPersonaje)
             {
                 case Tipo.delantero:
-                    indicePersonaje = random.Next(0, (nombresDelanteros.Length));
-                    if ((DateTime.TryParseExact(fechaNacimientoDelanteros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux)))
-                    {
-                        DatosPersonaje.FechaNacimiento = fechaAux;
-                    }
-                    else
-                    {
-                        DatosPersonaje.FechaNacimiento = FechaAleatoria();
-                    }
-
-                    DatosPersonaje.Nombre = nombresDelanteros[indicePersonaje];
-                    DatosPersonaje.Apodo = apodosDelanteros[indicePersonaje];
-                    CaracteristicasPersonaje.Control = random.Next(5, 10);
-                    CaracteristicasPersonaje.Tiro = random.Next(5, 10);
-                    CaracteristicasPersonaje.Intercepciones = random.Next(1, 5);
-                    CaracteristicasPersonaje.Marcaje = random.Next(1, 5);
-                    CaracteristicasPersonaje.Nivel = 1;
-
+                    CrearDelantero(random, DatosPersonaje, CaracteristicasPersonaje, out indicePersonaje, out fechaAux);
                     break;
                 case Tipo.mediocampo:
-                    indicePersonaje = random.Next(0, (nombresMediocampos.Length));
-                    if (DateTime.TryParseExact(fechasNacimientoMediocampos[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
-                    {
-                        DatosPersonaje.FechaNacimiento = fechaAux;
-                    }
-                    else
-                    {
-                        DatosPersonaje.FechaNacimiento = FechaAleatoria();
-                    }
-
-                    DatosPersonaje.Nombre = nombresMediocampos[indicePersonaje];
-                    DatosPersonaje.Apodo = apodosMediocampos[indicePersonaje];
-                    CaracteristicasPersonaje.Control = random.Next(1, 10);
-                    CaracteristicasPersonaje.Tiro = random.Next(1, 10);
-                    CaracteristicasPersonaje.Intercepciones = random.Next(1, 10);
-                    CaracteristicasPersonaje.Marcaje = random.Next(1, 10);
-                    CaracteristicasPersonaje.Nivel = 1;
+                    CrearMediocampo(random, DatosPersonaje, CaracteristicasPersonaje, out indicePersonaje, out fechaAux);
                     break;
                 case Tipo.defensa:
-                    indicePersonaje = random.Next(0, (nombresDefensas.Length));
-                    if (DateTime.TryParseExact(fechasNacimientoDefensas[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
-                    {
-                        DatosPersonaje.FechaNacimiento = fechaAux;
-                    }
-                    else
-                    {
-                        DatosPersonaje.FechaNacimiento = FechaAleatoria();
-                    }
-
-                    DatosPersonaje.Nombre = nombresDefensas[indicePersonaje];
-                    DatosPersonaje.Apodo = apodosDefensas[indicePersonaje];
-                    CaracteristicasPersonaje.Control = random.Next(1, 5);
-                    CaracteristicasPersonaje.Tiro = random.Next(1, 5);
-                    CaracteristicasPersonaje.Intercepciones = random.Next(5, 10);
-                    CaracteristicasPersonaje.Marcaje = random.Next(5, 10);
-                    CaracteristicasPersonaje.Nivel = 1;
+                    CrearDefensa(random, DatosPersonaje, CaracteristicasPersonaje, out indicePersonaje, out fechaAux);
                     break;
                 case Tipo.arquero:
-                    indicePersonaje = random.Next(0, (nombresArqueros.Length));
-                    if (DateTime.TryParseExact(fechasNacimientoArqueros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
-                    {
-                        DatosPersonaje.FechaNacimiento = fechaAux;
-                    }
-                    else
-                    {
-                        DatosPersonaje.FechaNacimiento = FechaAleatoria();
-                    }
-
-                    DatosPersonaje.Nombre = nombresArqueros[indicePersonaje];
-                    DatosPersonaje.Apodo = apodosArqueros[indicePersonaje];
-                    CaracteristicasPersonaje.Control = random.Next(1, 5);
-                    CaracteristicasPersonaje.Tiro = random.Next(1, 5);
-                    CaracteristicasPersonaje.Intercepciones = random.Next(5, 10);
-                    CaracteristicasPersonaje.Marcaje = random.Next(5, 10);
-                    CaracteristicasPersonaje.Nivel = 1;
+                    CrearArquero(random, DatosPersonaje, CaracteristicasPersonaje, out indicePersonaje, out fechaAux);
                     break;
                 default:
                     break;
 
             }
+            CrearValoresBase(DatosPersonaje, CaracteristicasPersonaje, personajeCreado);
+            return (personajeCreado);
+        }
+
+        private void CrearValoresBase(Datos DatosPersonaje, Caracteristicas CaracteristicasPersonaje, Personaje personajeCreado)
+        {
             DatosPersonaje.Edad = CalculaEdad(DatosPersonaje.FechaNacimiento);
             personajeCreado.DatosPersonaje = new Datos();
             personajeCreado.DatosPersonaje = DatosPersonaje;
             personajeCreado.CaracteristicasPersonaje = new Caracteristicas();
             personajeCreado.CaracteristicasPersonaje = CaracteristicasPersonaje;
-            return (personajeCreado);
         }
+
+        private void CrearArquero(Random random, Datos DatosPersonaje, Caracteristicas CaracteristicasPersonaje, out int indicePersonaje, out DateTime fechaAux)
+        {
+            indicePersonaje = random.Next(0, (nombresArqueros.Length));
+            if (DateTime.TryParseExact(fechasNacimientoArqueros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
+            {
+                DatosPersonaje.FechaNacimiento = fechaAux;
+            }
+            else
+            {
+                DatosPersonaje.FechaNacimiento = FechaAleatoria();
+            }
+
+            DatosPersonaje.Nombre = nombresArqueros[indicePersonaje];
+            DatosPersonaje.Apodo = apodosArqueros[indicePersonaje];
+            CaracteristicasPersonaje.Control = random.Next(1, 5);
+            CaracteristicasPersonaje.Tiro = random.Next(1, 5);
+            CaracteristicasPersonaje.Intercepciones = random.Next(5, 10);
+            CaracteristicasPersonaje.Marcaje = random.Next(5, 10);
+            CaracteristicasPersonaje.Nivel = 1;
+        }
+
+        private void CrearDefensa(Random random, Datos DatosPersonaje, Caracteristicas CaracteristicasPersonaje, out int indicePersonaje, out DateTime fechaAux)
+        {
+            indicePersonaje = random.Next(0, (nombresDefensas.Length));
+            if (DateTime.TryParseExact(fechasNacimientoDefensas[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
+            {
+                DatosPersonaje.FechaNacimiento = fechaAux;
+            }
+            else
+            {
+                DatosPersonaje.FechaNacimiento = FechaAleatoria();
+            }
+
+            DatosPersonaje.Nombre = nombresDefensas[indicePersonaje];
+            DatosPersonaje.Apodo = apodosDefensas[indicePersonaje];
+            CaracteristicasPersonaje.Control = random.Next(1, 5);
+            CaracteristicasPersonaje.Tiro = random.Next(1, 5);
+            CaracteristicasPersonaje.Intercepciones = random.Next(5, 10);
+            CaracteristicasPersonaje.Marcaje = random.Next(5, 10);
+            CaracteristicasPersonaje.Nivel = 1;
+        }
+
+        private void CrearMediocampo(Random random, Datos DatosPersonaje, Caracteristicas CaracteristicasPersonaje, out int indicePersonaje, out DateTime fechaAux)
+        {
+            indicePersonaje = random.Next(0, (nombresMediocampos.Length));
+            if (DateTime.TryParseExact(fechasNacimientoMediocampos[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux))
+            {
+                DatosPersonaje.FechaNacimiento = fechaAux;
+            }
+            else
+            {
+                DatosPersonaje.FechaNacimiento = FechaAleatoria();
+            }
+
+            DatosPersonaje.Nombre = nombresMediocampos[indicePersonaje];
+            DatosPersonaje.Apodo = apodosMediocampos[indicePersonaje];
+            CaracteristicasPersonaje.Control = random.Next(1, 10);
+            CaracteristicasPersonaje.Tiro = random.Next(1, 10);
+            CaracteristicasPersonaje.Intercepciones = random.Next(1, 10);
+            CaracteristicasPersonaje.Marcaje = random.Next(1, 10);
+            CaracteristicasPersonaje.Nivel = 1;
+        }
+
+        private void CrearDelantero(Random random, Datos DatosPersonaje, Caracteristicas CaracteristicasPersonaje, out int indicePersonaje, out DateTime fechaAux)
+        {
+            indicePersonaje = random.Next(0, (nombresDelanteros.Length));
+            if ((DateTime.TryParseExact(fechaNacimientoDelanteros[indicePersonaje], "dd-MM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out fechaAux)))
+            {
+                DatosPersonaje.FechaNacimiento = fechaAux;
+            }
+            else
+            {
+                DatosPersonaje.FechaNacimiento = FechaAleatoria();
+            }
+
+            DatosPersonaje.Nombre = nombresDelanteros[indicePersonaje];
+            DatosPersonaje.Apodo = apodosDelanteros[indicePersonaje];
+            CaracteristicasPersonaje.Control = random.Next(5, 10);
+            CaracteristicasPersonaje.Tiro = random.Next(5, 10);
+            CaracteristicasPersonaje.Intercepciones = random.Next(1, 5);
+            CaracteristicasPersonaje.Marcaje = random.Next(1, 5);
+            CaracteristicasPersonaje.Nivel = 1;
+        }
+
+        private static bool isValidPosition(int posicionIngresada)
+        {
+            return posicionIngresada > 0 && posicionIngresada <= 4;
+        }
+
         private DateTime FechaAleatoria()
         {
             DateTime fecha = DateTime.Today;

@@ -3,139 +3,32 @@ using EspacioPersonajes;
 using EspacioEquipos;
 using EspacioPersistenciaDeDatos;
 using System.Collections.Generic;
+using EspacioGraficos;
 
 internal class Program
 {
 
     private static void Main(string[] args)
     {
-        //PREPARO LOS DETALLES PREVIOS ANTES DE COMENZAR EL JUEGO
-        //Creación personajes y equipos
-        var persistencia = new PersonajesJSON();
-        var creadorEquipos = new FabricaEquipos();
-        string nombreArchivo = @"personajesJSON.json";
-        List<Equipos> listadoEquipos = new List<Equipos>();
-        var listadoJugadores = new List<Personaje>();
-
-        // Creacion listado competiciones. GetCompetencias es un metodo que accede a la API, y me devuelve los datos leidos de la API
-        var listadoCompeticiones = persistencia.GetCompetencias();
-
-        //La primera vez que uso el juego, creo el archivo JSON con los equipos y personajes y los guardo en el archivo personajesJSON. Si ya usé el juego anteriormente, el archivo de personajes ya existirá, por lo tanto, jugaré siempre con los mismos equipos
-        if (persistencia.Existe(nombreArchivo))
-        {
-            listadoEquipos = persistencia.LeerPersonajes(nombreArchivo);
-        }
-        else
-        {
-            var Equipo = new Equipos();
-            //Creo 10 equipos cuyos nombres NO se repiten
-            for (int i = 0; i < 10; i++)
-            {
-                //CreadorEquipos es un metodo que crea equipos con jugadores, de manera de que los jugadores no se repitan               
-                Equipo = creadorEquipos.CreadorEquipos(listadoJugadores);
-                foreach (var eq in listadoEquipos)
-                {
-                    //Realizo este control para evitar nombres de equipos repetidos
-                    while (eq.Nombre() == Equipo.Nombre())
-                    {
-                        //Si se repiten los equipos, los elimino al delantero, mediocampo y defensa o arquero del listado de jugadores, ya que este jugador si puede ser utilizado en un futuro equipo y creo el equipo que reemplazará al repetido
-                        listadoJugadores.Remove(Equipo.Delantero);
-                        listadoJugadores.Remove(Equipo.DefensaOArquero);
-                        listadoJugadores.Remove(Equipo.Mediocampo);
-                        Equipo = creadorEquipos.CreadorEquipos(listadoJugadores);
-                    }
-                }
-                //Cuando el equipo no está repetido lo agrego al listado
-                listadoEquipos.Add(Equipo);
-
-            }
-            //Escribo el listado de los 10 equipos que se usarán en el juego en el archivo personajesJSON
-            persistencia.GuardarPersonajes(listadoEquipos, nombreArchivo);
-        }
+        List<Equipos> listadoEquipos = ObtenerEquiposJuego();
 
         //COMIENZA EL JUEGO
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("\tSe asignaran 2 equipos, los cuales jugarán entre ellos.\n Serán 3 enfrentamientos: Delantero vs Defensa o Arquero, Defensa o Arquero vs Delantero, Mediocampo vs Mediocampo. Cada enfrentamiento, será una jugada al azar, pueden ser jugadas de mucho o poco peligro, las cuales influirán en la efectividad o probabilidad de meter gol para el equipo que ataca, las jugadas mas efectivas, aumentarán mas el ataque que la defensa y las menos efectivas aumentaran mas la defensa que el ataque, si tiene mas puntos el que está atacando, se sumará un gol al equipo que ataca, si tiene mas goles el que defiende, no se sumará nada y si tienen igual de puntos, el equipo que defiende tiene la posibilidad de hacer un gol de contrataque y se evaluara cual de los 2 tiene mas puntos totales el que ataca o el que defiende. Si tiene mas puntos el que ataca, el equipo atacante frena el contrataque y no ocurrira nada, si tiene mas puntos el que defiende se le sumara un gol a este equipo, (gol de contrataque), si tienen igual, no pasara nada\n. Se realizarán 3 jugadas. En caso de empate, cada jugador tendrá una jugada de ataque, una de defensa y un enfrentamiento entre mediocampos hasta que uno marque y el otro falle que se terminará el partido. A medida que se van produciendo empates, tu equipo recibirá una indicacion del entrenador (aleatoria) que puede mejorar, disminuir o no modificar las estadistcas de los jugadores. \nEl ganador, será el equipo que termina con más goles. Cuando un equipo gana, pasa a jugar la siguiente ronda, pero con un aumento de nivel que aumentara las posibilidades de ganar. El juego termina cuando un equipo vence a todos los equipos de la lista");
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\n=========================================EQUIPOS=====================================\n");
-        int k = 1;
         Console.WriteLine("\n_______________________________________________________________\n");
 
         //Muestro la lista de equipos que apareceran en el juego y luego el menu de inicio
-        foreach (var equipo in listadoEquipos)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine("\t" + k + "-" + equipo.Nombre());
-            k++;
-        }
+        MuestroListadoDeEquiposJuego(listadoEquipos);
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine("\n_______________________________________________________________\n");
         Console.ForegroundColor = ConsoleColor.DarkMagenta;
         Console.WriteLine("\n\n\n///////////////////////////\tCOMIENZA EL JUEGO\t///////////////////////////\n");
         Console.ForegroundColor = ConsoleColor.DarkRed;
         Console.BackgroundColor = ConsoleColor.White;
-        Console.WriteLine(@"⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣶⣾⣿⣿⣾⣿⣭⣵⣖⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣯⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⣢⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣵⣿⣿⠏⠁⢀⠀⠌⠁⠄⡉⠈⠉⠁⠉⠤⠱⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣌⣾⣿⣿⣧⠂⡌⠢⠑⡈⠄⠢⠐⠄⢂⠁⢃⠦⠹⣶⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⡱⣈⠅⡃⠔⠀⠄⠁⠀⠂⠄⠀⠄⣳⢎⢇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣽⣿⣿⡿⢋⠠⢁⠎⠴⢞⣷⣦⣤⣦⣧⣜⣦⣿⣶⣾⣾⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣿⡧⢀⠂⠌⣐⣿⢟⣋⣿⣿⠿⠏⠀⢺⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣞⠛⢿⡗⢢⡀⠀⠉⠁⢂⣈⣻⡽⠃⠔⠂⠈⣿⠩⣍⠒⣽⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⢃⣹⡌⢿⡀⠂⠁⠀⢀⠠⢉⠁⡀⢤⡌⡐⠀⡘⣷⢎⣽⡎⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡚⣏⡁⢀⣷⠀⡀⠌⢠⡚⡤⠃⠔⡏⠸⠿⢿⣿⣿⣯⢷⣧⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢇⠘⠸⢻⣿⡄⣃⠄⡇⢧⠀⢃⠸⠀⣤⢿⣿⢿⣿⡿⣿⡼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠹⣿⡗⣯⡐⢯⡜⡡⠌⠀⢰⣾⣻⣾⣿⣿⣿⣿⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣟⠰⢹⣞⡵⣊⠅⠂⠀⠈⢱⣿⣿⣿⡿⢿⣹⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⠣⣜⢻⣷⣉⠆⡠⠀⡀⢳⣙⡿⠿⣡⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣧⢉⣮⠹⢿⣮⣱⡰⣩⣿⣿⣯⣷⣿⣿⢣⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣯⢁⢎⡡⢠⡙⣷⣿⣷⣿⣽⣿⣿⣿⣿⣏⢻⣟⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣼⢳⡌⠒⣧⢣⡝⢤⣿⣿⣿⣿⣿⣿⡿⣟⣾⣿⣿⣿⣳⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣴⣶⣿⡿⣽⢸⡇⡘⣷⠂⡜⣺⣿⢟⣿⣿⣿⣿⣝⣻⣿⣿⣿⣿⣿⡿⡷⣦⡤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣟⣿⣿⣿⣟⡷⣿⢿⣨⢻⡠⣿⡇⢸⣿⡏⠰⣨⢿⣿⣿⣾⣿⣿⣿⣿⣿⣻⢷⣻⡗⣿⣳⢗⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣾⣿⣿⣿⣿⣳⢯⣿⣻⣿⣥⠈⡧⣹⣏⠳⡍⢀⢲⣽⢿⣞⡿⣿⢿⡿⣿⣝⣳⣟⣯⣷⢻⣷⣹⣞⣯⣧⣶⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣞⣯⢿⣽⣾⣿⣿⣟⣾⣽⣟⣷⣻⣽⢿⣦⣿⣸⣿⣵⣰⣾⣟⣯⢿⡾⣝⣳⢯⢷⣏⢿⡼⢧⣟⢾⣻⢞⣽⣻⡾⢯⣷⣛⢿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣯⢟⣶⡻⣞⣿⣿⣿⣿⡿⣾⡽⣾⡽⣾⡽⣯⡿⣯⣿⣽⣻⡾⣟⣯⡽⣞⣳⢯⢯⡽⣞⣻⢾⣏⣿⢯⣞⣯⣳⢟⣮⢿⣽⣻⢞⡽⣮⡹⢿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⣟⣾⣻⢾⡽⣿⣿⡿⣿⣽⣿⣳⣟⣷⣻⢷⣻⢷⣻⣷⣟⡾⣯⢟⡾⣖⡿⣭⡟⣾⣫⢷⢯⣽⣻⢮⡽⣞⡮⢷⡭⣟⣾⣻⠶⣏⡿⣽⠶⣏⡷⣹⢟⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⢷⣯⣷⣯⢿⣽⣿⣿⣿⣿⣟⣷⣻⣞⡷⣯⢿⡽⣯⢷⣻⢾⣽⡳⣯⢟⡾⣵⣛⣾⢳⣽⣫⢟⡷⣿⣚⣿⣳⣽⣫⢾⣽⣟⣧⢿⣽⣹⢯⡿⣽⢞⣵⣫⢞⣣⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣯⢿⣟⣯⣟⡿⣾⣿⣯⣿⢾⣽⣞⡷⣯⢿⡽⣯⢿⡽⣯⣟⣯⢾⣝⣳⢯⣟⠾⣝⣞⡯⣶⣯⡿⣽⣻⣽⣾⣽⢞⣳⢯⣾⣟⡾⣏⡾⣭⢷⣻⠽⣞⢧⢯⢿⡼⣹⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣽⣯⣿⣿⣞⣿⣿⢿⣽⣾⠛⠇⢸⡿⣽⢯⡿⣽⢯⣟⣷⣻⢯⡾⣭⣟⣳⢾⣻⢷⢛⣵⠷⠷⣭⣛⣯⡷⣯⣻⢞⡽⣚⣯⢿⡽⣯⡽⣏⣯⢷⣻⢯⣯⣟⣮⢳⢷⡺⣵⢦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⡾⣷⣿⣿⣿⣾⣿⢿⢟⢶⣳⣾⣒⣿⢯⡿⣽⢯⣟⣾⣳⡯⣷⢫⡷⣾⢽⣻⣅⣹⡟⢸⣶⠔⣿⣤⣷⣟⡷⢯⣯⣽⢫⣿⡯⣟⣵⡻⣝⣾⢣⣿⣟⣮⣽⣾⣿⣾⣿⣿⠟⢣⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣿⣿⣽⣻⣟⣯⢿⣻⣟⣯⢿⡽⣯⣟⣾⣳⡯⣟⡵⣯⣟⣞⣯⢷⣏⢛⣧⡜⣫⢜⣿⣢⣞⡾⣽⡻⣞⡼⣯⢷⡻⣝⣮⡽⡿⣭⣿⣷⣿⣿⣿⣿⣿⣿⡟⠀⢸⣯⢣⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⢿⣿⣯⣿⣿⣿⣿⡷⣟⡾⣽⢯⣷⣻⣞⣯⣟⣷⣻⣞⡷⣿⡽⣹⢶⣻⢮⡽⣾⢽⣻⢯⣿⡾⣾⣻⡽⢾⣹⣳⡽⣭⠿⣽⣯⢻⡵⢾⣹⣟⣿⣿⣿⣿⣿⣟⣷⣿⣿⡄⡄⢸⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⣯⣿⡽⣟⣷⣿⢿⣿⣿⣯⢿⣽⣻⣞⣷⣻⢾⡽⣞⡷⣯⣟⡷⣽⢫⣯⠷⣯⢟⣾⣫⣽⣛⣮⣽⢳⢧⡟⣯⣳⡽⣳⢯⣿⣷⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣿⣿⣿⣿⣷⡙⡄⠙⢹⠿⢆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⣿⣞⡿⣟⣿⡽⣿⣯⣷⣿⣟⣾⣳⣟⣾⣽⣿⡠⠤⠤⠭⠭⠭⢉⣿⣼⡻⣭⣟⡶⣛⣶⢻⡼⣞⡯⣟⣾⣳⢯⣿⡽⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣾⣛⣿⣣⣏⢿⣺⣦⣵⣒⣒⣬⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣿⣿⣿⣳⣟⣿⣷⣿⣿⣿⣿⢿⣽⣯⢉⡉⠉⠹⣧⠀⠀⠀⠀⢀⣜⣉⣋⡓⡛⠛⠓⢛⣹⣞⣷⣻⣷⣿⣽⣻⣾⣯⣷⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢯⣻⣽⡿⣟⢿⡻⣜⢯⣻⡽⣿⢿⡿⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⢟⣿⡿⣽⣿⣿⣿⣿⣿⣿⣿⣿⠇⢰⠃⠀⠀⠀⠀⠀⠀⠤⠀⠈⠁⠀⠀⠀⢀⡜⠉⣹⣟⡾⣗⡿⣻⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡽⢯⡷⣯⣿⢾⡷⣽⣞⣭⡷⣿⣹⣞⡷⢯⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠎⣷⠃⣹⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⣘⣙⣉⣉⣹⠇⠀⠀⠀⠀⣸⣓⣚⣒⡒⠋⠀⣰⠿⣼⠿⣽⣳⢯⡿⣽⡻⣟⣯⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣽⣷⣿⣾⢿⣷⢯⡿⣽⡷⠿⠚⢩⠻⢏⢆⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡎⣾⠿⣱⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣟⣯⣟⡿⣿⣈⣉⣉⣙⣉⣙⣙⡿⣽⣳⣟⡻⢿⣹⡟⣧⢿⣻⡽⣯⣷⣯⣿⣿⣿⣿⣿⣿⢧⣿⠹⣿⠉⣿⣿⣿⣿⣿⣿⣻⣾⣟⣯⣟⡿⢋⡁⠰⣀⠃⢆⡙⢦⢉⢦⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣰⣿⢃⣾⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣾⣽⣿⡽⣯⣿⣽⣯⣟⣾⣱⣟⣳⡽⣾⣽⣏⡷⣽⢫⣟⣶⣿⣿⣿⣿⣿⣿⣿⡿⣿⡏⢸⣧⠘⣿⠀⣿⣿⣿⣿⣿⠛⠛⠿⠟⠻⣧⢒⠥⣊⠵⣌⠳⢄⠐⢂⠳⡌⢧⡀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠛⢧⣿⣽⡭⣿⣿⣿⣿⣿⣿⣿⣿⡿⠁⢸⣿⡇⢻⢹⣷⠸⢣⠃⡓⢦⢡⣷⢸⢸⣿⢰⣲⡆⢱⣿⣻⢾⡽⣷⣿⣿⣿⣿⡿⣯⣿⣿⡇⢸⡏⢸⡯⢠⣿⣿⢷⣯⠇⠀⠀⠀⠀⠀⠈⢻⡶⣡⠚⡌⠡⠌⡘⣦⠐⠤⣀⠑⢤⡀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡠⢊⡴⢡⢊⠻⣿⣼⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠈⣿⣶⣾⣷⢿⣿⢿⣿⣿⣶⣳⢶⣞⡶⣞⡶⣶⢷⣻⢮⡷⣯⣿⣿⣿⣿⣟⣷⣻⣿⣿⢿⡇⢸⡇⢸⠇⢸⣿⢯⣟⡾⠀⠀⠀⠀⠀⠀⠀⠀⠙⣷⡷⣈⠒⠈⡔⣹⢌⠲⣁⠦⠀⠙⢄⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠔⡩⣔⡯⣿⣸⠃⠱⣈⢛⣿⣻⣿⣿⣿⣿⡿⠁⠀⠀⠀⢹⣿⣳⣯⣿⢾⡿⣿⣿⣷⢯⣟⡾⣽⣏⡿⣽⣻⢯⡿⣽⣿⣿⣿⣿⣳⠿⣼⣿⣿⣿⣿⠀⣿⠀⣾⠀⢸⣟⡿⣾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣧⡆⠨⠄⡸⣌⠲⡡⢎⡑⢢⡈⠣⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠔⡪⢔⠮⣵⢫⠾⢃⠋⢀⡡⢖⣿⣾⣿⣿⣯⣿⡿⠁⠀⠀⠀⠀⠈⣿⣷⣿⣾⣿⢿⣿⣽⣿⣻⢾⣽⣳⢾⡽⣯⣟⣽⣿⣿⡿⣟⡿⣜⣳⣿⣿⣿⣿⣾⡇⠀⣿⠀⣿⠀⢸⣯⢿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⡅⢢⠱⣎⠱⡡⣆⠸⡡⢄⠀⢣
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠔⡚⢤⢛⡴⢫⠞⠲⢉⠰⢀⢢⠱⣬⣟⢫⡾⣽⣿⣾⡿⠁⠀⠀⠀⠀⠀⠐⣿⣿⣷⣿⣿⣿⣿⡿⣾⣽⣻⢾⡽⣯⣟⡷⡽⣾⣳⣯⣽⣳⣿⣽⣿⣿⣿⣯⢿⡽⡇⠀⣿⠀⣿⠀⢸⣯⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢧⡓⠉⠉⠷⣱⣘⢆⠡⠂⡉⢼
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠔⡊⠔⡬⣘⠦⡍⠆⠓⡌⡱⢈⡔⣡⢞⣹⢳⣞⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⣿⣿⣯⣿⣿⣯⣿⣿⣯⢷⣯⢿⣽⣳⢯⣻⠵⣯⣷⣟⣾⣽⣷⣿⣿⣿⣿⣿⣿⣿⡇⠀⣿⠀⣹⠀⣸⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡴⠉⠀⡄⠉⠠⢀⠉⢀⠀⠑⢢⣹
-⠀⠀⣀⣀⢀⡀⣀⠖⠉⣈⢧⠀⠀⠀⠀⠀⠀⣀⢤⣒⢮⡙⡔⣪⠜⣊⠒⡡⢊⡔⡩⢖⡸⣡⢧⡺⣜⣮⣿⣿⣾⣿⡿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⣟⣿⣿⣿⣿⣯⣿⣟⣾⣻⢾⣽⢻⣼⢻⣯⢷⣿⣿⡿⣿⣿⣿⣟⣷⡻⣞⣷⡇⠀⡿⢁⣿⢀⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣦⡁⠸⣴⣜⣴⡭⣶⡏⠾⡼⢶⠉
-⡴⠉⡄⠀⢀⡰⢥⣠⣽⣿⣯⣷⢄⡠⠴⣒⣽⣼⣾⢿⣆⠳⡘⢡⣘⡤⣋⠴⣣⢼⡱⢯⣜⣧⣿⣽⣿⣿⣿⡿⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣯⣟⡾⣽⢯⡞⣧⣟⡿⣾⣿⣿⣟⣿⣿⣿⣟⡾⣧⣿⣟⣷⡳⣠⠁⣸⣿⣿⣿⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢱⠀⣼⢁⡀⢠⢐⡀⣈⠐⡀⠠⢠
-⢸⡷⣆⣡⣾⣇⠟⢚⣿⣿⣿⣿⣿⣾⣿⢿⣙⣫⣵⣮⢿⣷⣛⣯⣵⣶⣽⣿⣽⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣟⣿⣿⣿⣻⡝⣮⣽⣳⢯⣿⣿⣿⣟⣾⣿⣿⡟⣾⣻⣏⡷⡾⠋⣰⡇⢀⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⢉⡟⠾⠷⢾⢿⡻⢿⡽⢿⡏
-⠏⠐⡠⢉⠉⣹⣤⣼⣿⣿⣿⣿⣿⣿⣷⣻⣿⣯⣷⣾⣿⣿⣿⣿⣿⣿⡿⠿⠿⠿⠛⠛⠛⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⣿⣾⣿⣿⣏⡷⣽⣷⣯⣿⣿⣿⣿⣳⣿⣿⣿⣳⣿⣿⡿⣯⢿⠁⢰⣟⣠⣾⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⣮⡝⢯⢶⣧⢇⣶⣻⠇
-⠛⡿⢳⡷⠾⠟⠛⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿⢷⣿⣿⢟⣽⣿⣿⣟⣾⣿⣿⣟⣾⣿⢿⣽⣾⣿⣿⢯⡿⣽⠏⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣇⡤⣩⣍⣫⣌⣴⣿⠏⠀
-⠀⠳⡶⣬⣓⣤⠿⠟⣋⣿⡿⣟⣫⣿⠿⠛⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡿⣯⢿⣽⣾⣿⣿⡟⣧⣿⣿⣿⢯⣟⣿⣽⣾⣿⣿⣻⣞⣯⢿⡝⢀⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠻⠾⠷⠾⠟⠉⠀⠀
-⠀⠀⢹⣀⠆⡴⣤⣾⣿⣿⡿⠟⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⡿⣽⣿⣿⣿⣿⡟⣧⢿⣿⣿⣟⣧⣿⣿⣿⡿⣿⡽⣞⣷⣻⣞⡟⣠⣿⣟⣾⡿⣯⢿⣿⣿⢿⣿⣿⣿⣿⠆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠉⠛⠛⠛⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿⣿⣿⣿⣿⣿⣾⢿⣽⣿⣿⣛⣾⣿⣿⢿⣯⣟⣷⣻⡽⣾⢳⡟⢹⡏⢻⡇⠸⣽⣻⣿⢿⣽⣯⣿⣿⣿⢯⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢾⣿⣿⣿⣯⣿⣟⣯⣿⣿⣿⣾⣿⣿⣻⣽⣻⢾⡽⣞⡷⣻⢭⣏⢿⠀⢧⠈⢷⡀⠻⣟⡿⣯⣿⣿⢿⣻⣽⣿⣻⡦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⡟⣿⣷⣿⣿⣿⣿⣿⢻⣷⣯⡟⣾⣽⣯⠛⣷⣽⢹⣮⡟⣾⢣⠘⣷⡄⢹⣦⠈⣿⣽⣿⣾⣿⣿⣷⣿⣷⣿⣵⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢨⣿⣽⣿⡿⣿⣿⣿⢿⣻⣾⣿⣻⡽⣛⡷⣻⡼⣻⢵⣫⡟⣼⣿⢯⡿⡄⢸⣧⠀⣿⠀⢽⣻⣽⣯⢿⣽⡻⣟⣿⣻⣷⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⢿⣿⣿⡿⣟⢾⣱⣻⢭⢷⡻⣼⢏⣷⣻⣼⢿⣯⣿⣿⡇⣹⣿⢸⣿⠀⣿⣿⣿⣿⣿⣿⢿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⣿⣿⡿⣿⣿⣟⣿⡿⣏⣷⢫⣯⢳⣭⡟⣾⣝⣷⢿⣻⣽⣾⣿⣿⣿⣿⡗⢻⣯⠀⣿⠀⢹⣟⣿⣻⢯⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣽⣿⣿⡿⣽⣟⣳⡽⣞⣻⣼⣛⣶⣻⢳⣯⣞⣯⣿⣿⣿⡟⣛⡿⣽⢇⠀⣿⠀⢹⡇⠈⣟⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣻⣿⣻⣯⣿⣽⣫⢾⣵⡻⣧⢯⣟⣶⣿⣻⢷⣯⣿⢿⣻⢽⡻⣝⣻⢮⣿⠀⠹⡇⠸⣷⠀⢿⣳⣯⢿⣽⣿⣿⣿⣿⣿⢿⡃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣾⣷⣯⣷⣾⡽⣿⣞⣿⡻⣟⣯⣷⣾⢿⡟⣿⣻⢯⡷⣯⠿⠙⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⢉⡠⣾⣿⣷⡟⠁⡏⠀⠀⡃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣯⢿⣟⣮⢷⣻⣶⣻⣶⣻⣽⣞⣳⣯⠿⠙⢗⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢤⣾⣭⢿⡟⣹⣿⡷⠀⡅⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡟⠋⠉⠉⠋⠉⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡐⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠚⠉⠀⠀⢻⡇⢹⣟⡿⠱⠁⢠⠐⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⡇⣿⣿⢃⠇⢠⠂⢨⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡷⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣰⣿⣿⢿⡿⠄⢠⠃⠠⡾⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀");
+        var graficos = new ServicioGrafico();
+        Console.WriteLine(graficos.Portada());
         Console.ResetColor();
         Random rand = new Random();
         int eq1;
@@ -143,18 +36,7 @@ internal class Program
         Console.WriteLine("\nElije un equipo del 1 al 10\n");
         //Selecciono un equipo del 1 al 10. Si ingreso un numero invalido, se me asignara uno aleatorio
         string? equipoEl = Console.ReadLine();
-        if (int.TryParse(equipoEl, out eq1))
-        {
-            if (eq1 > 10 || eq1 < 0)
-            {
-                eq1 = rand.Next(1, 11);
-            }
-
-        }
-        else
-        {
-            eq1 = rand.Next(1, 11);
-        }
+        eq1 = ControlEquipoElegidoValido(rand, equipoEl);
         //Asigno al equipo1, el equipo elegido (resto 1 porque debo tener en cuenta que en un arreglo comienza en la direccion 0)
         Equipos equipo1 = listadoEquipos[eq1 - 1];
         Console.ForegroundColor = ConsoleColor.Blue;
@@ -172,33 +54,90 @@ internal class Program
         //Juego partidas mientras gano y no haya vencido todos los equipos del juego, sigo jugando
         while (ganador == equipo1 && listadoEquipos.Count() > 0)
         {
+            ganador = AvanzaNivel(listadoEquipos, graficos, rand, equipo1, out eq2, out equipo2, ganador);
+        }
+        // Si ya venci todos los equipos, gane, sino quiere decir que salgo del while porque perdí
+        if (listadoEquipos.Count() == 0)
+        {
+            MuestraMenuGanador(graficos, equipo1);
+        }
+        else
+        {
+            MuestraMenuPerdedor(graficos);
+        }
+
+        Console.ResetColor();
+
+        static void Crear10Equipos(FabricaEquipos creadorEquipos, List<Equipos> listadoEquipos, List<Personaje> listadoJugadores)
+        {
+            var Equipo = new Equipos();
+            //Creo 10 equipos cuyos nombres NO se repiten
+            for (int i = 0; i < 10; i++)
+            {
+                //CreadorEquipos es un metodo que crea equipos con jugadores, de manera de que los jugadores no se repitan               
+                Equipo = creadorEquipos.CreadorEquipos(listadoJugadores);
+                foreach (var eq in listadoEquipos)
+                {
+                    //Realizo este control para evitar nombres de equipos repetidos
+                    while (eq.Nombre() == Equipo.Nombre())
+                    {
+                        //Si se repiten los equipos, los elimino al delantero, mediocampo y defensa o arquero del listado de jugadores, ya que este jugador si puede ser utilizado en un futuro equipo y creo el equipo que reemplazará al repetido
+                        EliminaUltimosAgregados(listadoJugadores, Equipo, 3);
+                        Equipo = creadorEquipos.CreadorEquipos(listadoJugadores);
+                    }
+                }
+                //Cuando el equipo no está repetido lo agrego al listado
+                listadoEquipos.Add(Equipo);
+
+            }
+
+            static void EliminaUltimosAgregados(List<Personaje> listadoJugadores, Equipos Equipo, int cantEliminar)
+            {
+                var listadoJugAgregados = Equipo.GetAllJugadores();
+                foreach (var jugador in listadoJugAgregados)
+                {
+                    listadoJugadores.Remove(jugador);
+                }
+            }
+        }
+
+        static void MuestroListadoDeEquiposJuego(List<Equipos> listadoEquipos)
+        {
+            int k = 1;
+            foreach (var equipo in listadoEquipos)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine("\t" + k + "-" + equipo.Nombre());
+                k++;
+            }
+        }
+
+        static int ControlEquipoElegidoValido(Random rand, string? equipoEl)
+        {
+            int eq1;
+            if (int.TryParse(equipoEl, out eq1))
+            {
+                if (eq1 > 10 || eq1 < 0)
+                {
+                    eq1 = rand.Next(1, 11);
+                }
+
+            }
+            else
+            {
+                eq1 = rand.Next(1, 11);
+            }
+
+            return eq1;
+        }
+
+        static Equipos AvanzaNivel(List<Equipos> listadoEquipos, ServicioGrafico graficos, Random rand, Equipos equipo1, out int eq2, out Equipos equipo2, Equipos ganador)
+        {
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
             Console.WriteLine("\n\n");
-            Console.WriteLine(@"
-  _____ _____ _____ _    _ _____ ______ _   _ _______ ______   _____        _____ _______ _____ _____   ____  
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____| |  __ \ /\   |  __ \__   __|_   _|  __ \ / __ \ 
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__    | |__) /  \  | |__) | | |    | | | |  | | |  | |
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|   |  ___/ /\ \ |  _  /  | |    | | | |  | | |  | |
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |  / ____ \| | \ \  | |   _| |_| |__| | |__| |
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______| |_| /_/    \_\_|  \_\ |_|  |_____|_____/ \____/ 
-                                                                                                               
-                                                                                                               ");
-            Console.WriteLine(@"
-                                                                                        ,/)
-                                                                                        |_|
-        _        _        _        _        _        _        _        _        _       ].[       ,~,
-       |.|      |.|      |.|      |.|      |.|      |.|      |.|      |.|      |.|    /~`-'~\     |_|
-       ]^[      ]^[      ]^[      ]^[      ]^[      ]^[      ]^[      ]^[      ]^[   (<|   |>)    ]0[
-     /~/^\~\  /~`-'~\  /~`-'~\  /~`-'~\  /~`-'~\  /~`-'~\  /~`-'~\  /~`-'~\  /~`-'~\  \|___|/   ,-`^'~\
-    {<| $ |>}{<| 8 |>}{<| 6 |>}{<| , |>}{<| 3 |>}{<| 7 |>}{<| 9 |>}{<| , |>}{<| 2 |>} {/   \}  {<|   |>}
-     \|___|/  \|___|/  \|___|/  \|___|/  \|___|/  \|___|/  \|___|/  \|___|/  \|___|/  /__1__\   \|,__|/
-    /\    \    /   \    /   \    /   \    /   \    /   \    /   \    /   \    /   \   | / \ |   {/ \  /
-    |/>/|__\  /__|__\  /__|__\  /__|__\  /__|__\  /__|__\  /__|__\  /__|__\  /__|__\  |/   \|   /__|\/\
-    |)   \ |  | / \ |  | / \ |  | / \ |  | / \ |  | / \ |  | / \ |  | / \ |  | / \ |  {}   {}   | / \ |
-   (_|    \)  (/   \)  (/   \)  (/   \)  (/   \)  (/   \)  (/   \)  (/   \)  (/   \)  |)   (|   (/   \)
-   / \    (|  |)   (|  |)   (|  |)   (|  |)   (|  |)   (|  |)   (|  |)   (|  |)   (|  ||   ||  _|)   (|_
-.,.\_/,..,|,)(.|,.,|,)(,|,.,|.)(.|,.,|,)(,|,.,|.)(.|,.,|,)(,|,.,|.)(.|,.,|,)(,|,.,|.)(.|.,.|,)(.,|.,.|,.),.,.");
+            Console.WriteLine(graficos.escribeSiguientePartido());
+            Console.WriteLine(graficos.graficoSiguientePartido());
             Console.ResetColor();
             //Restablezco los goles del equipo despues de cada partido
             equipo1.ReestableceGoles();
@@ -209,73 +148,56 @@ internal class Program
             //ganador es el equipo1 si gane el partido anterior, por lo tanto, aumento su nivel y juego la partida
             ganador.aumentaNivel();
             ganador = JuegaPartida(equipo1, equipo2);
+            return ganador;
         }
-        // Si ya venci todos los equipos, gane, sino quiere decir que salgo del while porque perdí
-        if (listadoEquipos.Count() == 0)
+
+        static void MuestraMenuGanador(ServicioGrafico graficos, Equipos equipo1)
         {
             Console.BackgroundColor = ConsoleColor.DarkYellow;
             Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine(@"
-   _____          __  __ _____  ______ ____  _   _ _ _ 
-  / ____|   /\   |  \/  |  __ \|  ____/ __ \| \ | | | |
- | |       /  \  | \  / | |__) | |__ | |  | |  \| | | |
- | |      / /\ \ | |\/| |  ___/|  __|| |  | | . ` | | |
- | |____ / ____ \| |  | | |    | |___| |__| | |\  |_|_|
-  \_____/_/    \_\_|  |_|_|    |______\____/|_| \_(_|_)
-                                                       
-                                                       ");
-            Console.WriteLine(@"
-        ____
-       ( () )
-        \  /
-         ||
-         ||
-        [__]
-       /)  (\
-      (( () ))
-       \\__//
-        `..'
-         ||
-         ||    
-        //\\__
-     _ ((  `--'
-    (_) \)
-");
+            Console.WriteLine(graficos.escribeCampeon());
+            Console.WriteLine(graficos.graficoCampeon());
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("\nGANADOR: ");
             Console.WriteLine(equipo1.Mostrar());
             Console.ResetColor();
         }
-        else
+
+        static void MuestraMenuPerdedor(ServicioGrafico graficos)
         {
             Console.BackgroundColor = ConsoleColor.Red;
             Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine(@"
-  _____  ______ _____  _____ _____  _____ _______ ______ _ _ 
- |  __ \|  ____|  __ \|  __ \_   _|/ ____|__   __|  ____| | |
- | |__) | |__  | |__) | |  | || | | (___    | |  | |__  | | |
- |  ___/|  __| |  _  /| |  | || |  \___ \   | |  |  __| | | |
- | |    | |____| | \ \| |__| || |_ ____) |  | |  | |____|_|_|
- |_|    |______|_|  \_\_____/_____|_____/   |_|  |______(_|_)
-                                                             
-                                                            ");
-            Console.WriteLine(@"
-         _
-        |.|
-        ]^[
-      ,-|||~\
-     {<|||||>}
-      \|||||/
-      {/   \}
-      /__9__\
-      | / \ |
-      (<   >)
-     _|)   (|_
-,.,.(  |.,.|  ).,.,.");
+            Console.WriteLine(graficos.escribePerdiste());
+            Console.WriteLine(graficos.graficoPerdiste());
         }
 
+        static List<Equipos> ObtenerEquiposJuego()
+        {
+            Console.ResetColor();
+            //PREPARO LOS DETALLES PREVIOS ANTES DE COMENZAR EL JUEGO
+            //Creación personajes y equipos
+            var persistencia = new PersonajesJSON();
+            var creadorEquipos = new FabricaEquipos();
+            string nombreArchivo = @"personajesJSON.json";
+            List<Equipos> listadoEquipos = new List<Equipos>();
+            var listadoJugadores = new List<Personaje>();
+            // Creacion listado competiciones. GetCompetencias es un metodo que accede a la API, y me devuelve los datos leidos de la API
+            var listadoCompeticiones = persistencia.GetCompetencias();
+            //La primera vez que uso el juego, creo el archivo JSON con los equipos y personajes y los guardo en el archivo personajesJSON. Si ya usé el juego anteriormente, el archivo de personajes ya existirá, por lo tanto, jugaré siempre con los mismos equipos
+            if (persistencia.Existe(nombreArchivo))
+            {
+                listadoEquipos = persistencia.LeerPersonajes(nombreArchivo);
+            }
+            else
+            {
+                Crear10Equipos(creadorEquipos, listadoEquipos, listadoJugadores);
+                //Escribo el listado de los 10 equipos que se usarán en el juego en el archivo personajesJSON
+                persistencia.GuardarPersonajes(listadoEquipos, nombreArchivo);
+            }
 
+            return listadoEquipos;
+        }
     }
     public enum Jugada
     {
@@ -318,6 +240,7 @@ internal class Program
     }
     public static string JugadaAleatoria(Jugada jugada)
     {
+        var graficos = new ServicioGrafico();
         string jugadaSTR;
         Console.BackgroundColor = ConsoleColor.Cyan;
         Console.ForegroundColor = ConsoleColor.Black;
@@ -325,137 +248,36 @@ internal class Program
         {
             case Jugada.penal:
                 jugadaSTR = "Penal\n";
-                jugadaSTR += @"      ,
-     -   \O                                     ,  .-.___
-   -     /\                                   O/  /xx\XXX\
-  -   __/\ `                                  /\  |xx|XXX|
-     `    \, ()                              ` << |xx|XXX|
- jgs^^^^^^^^`^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+                jugadaSTR += graficos.graficoPenal();
                 break;
             case Jugada.frenteAFrente:
                 jugadaSTR = "Frente a frente\n";
-                jugadaSTR += @"
-                     ___
- o__        o__     |   |\
-/|          /\      |   |X\
-/ > o        <\     |   |XX\";
+                jugadaSTR += graficos.graficoFrenteAFrente();
                 break;
             case Jugada.saqueDelArco:
                 jugadaSTR = "Saque del arco";
-                jugadaSTR += @"  -                              ___
-         |.|                          . /\_/\
-       __]-[_________ /             .  (-<_>-)
-      /        _____|<_          .   .  \/_\/
-     / _   &  /               .   .
-    / / \_ __|            .
-  _/_/  / X   \
- <_/   /   ____\
-      /___/|  /             
-      |  / ( <                
-      ( <   \ |
-       \ |   >\
-       _>|  (_/
-      (__|";
+                jugadaSTR += graficos.graficoSaqueDelArco();
                 break;
             case Jugada.saqueDelMedio:
                 jugadaSTR = "Saque del medio\n";
-                jugadaSTR += @"
-                ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣾⣿⡿⠿⢿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣿⣿⣿⠁⠀⠚⠛⠉⢻⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢛⣿⠀⠀⠀⠀⢀⣾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠴⠶⢶⣏⠙⣇⠀⠀⢀⣾⡟⢳⣦⣤⣀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠴⠞⠋⠀⠀⠀⠀⠉⠙⠝⠷⠶⠛⣉⡴⠾⠇⠀⠈⢣⡀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⠾⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠴⠚⠁⠀⠀⢠⡄⢠⣤⣝⣦⣀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⡏⠀⠀⠀⣀⣀⣀⣤⣶⣶⡶⠤⠤⠀⠀⠀⠀⠀⠀⠀⠀⠀⣧⣸⣿⣿⣯⢻⣦⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠏⠀⣠⣴⠿⠋⠉⠉⣽⣏⠙⠛⠲⠤⠄⡀⠀⠀⠀⠀⠀⠘⣦⣿⣿⣿⣿⣿⠀⠙⢷⡀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡾⠁⢀⡼⠋⠁⠀⠀⠀⠀⣿⣿⡿⢦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡿⠉⠉⠻⣇⠀⠀⢰⡇
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣼⠁⠀⢸⠃⠀⠀⠀⠀⠀⠀⣿⡇⠙⠒⠬⠉⠑⠂⠀⠀⠀⠀⠀⠀⣿⠃⠀⠀⠀⠙⠷⣦⡾⠃
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣿⣿⣿⣿⠄⠀⠀⠀⠀⠀⠀⠙⢿⣤⡤⠀⠀⣄⠀⠀⠀⠀⠀⠀⢰⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠿⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⣸⡿⠂⢠⣤⣼⣷⣄⠀⠀⠀⠀⣾⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠟⠀⠀⠀⠀⠀⠈⠻⣿⣦⣤⣾⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⣠⠄⠀⠀⢈⣿⡏⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣆⠀⢀⣾⠁⠀⢠⡾⠛⠉⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⠛⠛⢷⣾⡇⠀⢠⡟⠀⠀⠀⠈⢻⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡾⠁⠀⠀⠀⢹⣿⣷⣾⡶⠀⠀⠀⢀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⠛⠛⠻⣦⠀⠀⣻⣿⠋⠁⠀⠰⣦⣴⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣰⠟⠀⠀⠀⣀⣹⣷⣾⣿⠇⠀⠀⢀⣴⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⡶⣶⠛⠋⠉⠀⠀⣴⡞⠙⠛⠋⠙⣿⡄⢀⣴⡿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⢀⡄⠀⣀⣤⣼⣿⠇⢠⣾⣦⠀⢿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⢀⣤⣤⣤⣤⣴⠟⠁⠀⠀⠀⣸⣿⠟⠉⠀⠸⣇⣄⡀⠛⠋⢀⣀⣼⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⢠⡟⠀⣈⠉⠀⣀⣀⡤⠶⠞⠛⠋⠉⠀⠀⠀⢤⡿⠿⣿⣦⣰⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⣠⡾⠃⠀⣹⣷⠟⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢦⣄⡈⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⣾⠋⠀⢀⡼⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⢷⣴⠾⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀";
+                jugadaSTR += graficos.graficoSaqueDelMedio();
                 break;
             case Jugada.tiroLibre:
                 jugadaSTR = "Tiro Libre";
-                jugadaSTR += @"
-           _
-         /_`\
-         /-\ )
-       __7_/_(_______ _
-      /        _____|<_\
-     /        /
-    / /|__ __/    
-  _/_/ /     |      
- <_/  /_     |
-     /  \-___|
-    ( )'  |  /      ___
-     \ |  ( )      /\_/\
-      >\  | /     (-<_>-)
-     (_/  |/       \/_\/    
-         (_)";
+                jugadaSTR += graficos.graficoTiroLibre();
 
                 break;
             case Jugada.corner:
                 Console.BackgroundColor = ConsoleColor.Green;
                 Console.ForegroundColor = ConsoleColor.White;
                 jugadaSTR = "Corner\n";
-                jugadaSTR += @"
-                              +---------------------------+    
-                              |\                          |\   
-                              | \    @ \_    /            | \
-                              |  \  /  \_o--<_/           | o\
-______________________________|___|/______________________|-|\|__________________
-         /                   /    /              _ o     / /|_                /
-        /                   /  _o'------------- / / \ ----/                  /
-       /                   /  /|_                /\    /                    /
-      /                   /_ /\ _______________ / / __/                    /
-     /                      / /                                           /
-    /                                                                    /
-   /                                                                    /
-  /                                                                    /
- /____________________________________________________________________/";
+                jugadaSTR += graficos.graficoCorner();
                 break;
             default:
                 Console.BackgroundColor = ConsoleColor.Yellow;
                 Console.ForegroundColor = ConsoleColor.Red;
                 jugadaSTR = "Otro\n";
-                jugadaSTR += @"
-                ⠀⠀⠀⣀⣤⣤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⢠⣾⢽⣍⣹⠾⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⢸⣷⢼⡁⢘⠗⢳⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠈⠻⣦⣯⣹⣶⠿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⢀⣰⠀⠀⠀⣼⣥⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⢸⡏⠀⠀⠀⠻⣿⣿⣿⣿⠛⠳⢤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠈⣧⠀⠀⠀⠀⠈⠁⠉⢿⣷⣤⣄⠀⠉⠑⢲⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠘⣆⠀⠀⠀⠀⠀⠀⠀⠉⠀⠈⠙⢦⣠⣾⠏⠈⠙⠲⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠘⢆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠳⢤⣀⠀⠀⠀⠑⢦⣀⣀⡤⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣶⣦⣀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⢀⣼⣿⣿⣦⣤⠬⣍⡑⠒⠒⡎⠉⠉⠉⠙⠒⢤⡴⠋⠀⠈⣻⣿⣿⡆⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣷⣿⣿⣿⣿⣿⣿⣧⣄⠉⠳⢴⣇⡀⠀⠀⠀⢠⢞⠀⠀⠀⠐⣿⣿⡟⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠈⠓⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣿⣿⣿⣿⣿⣿⡷⠖⠚⠉⠀⠀⠀⠀⠘⠮⢕⣒⣂⣼⠛⠁⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⢦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣿⣿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⡇⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠲⢤⣀⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⡆⠀⠀⠀⠀⠀⠀⠹⣆⠀⠀⠀⠀⢿⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⣀⡼⠋⠙⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠉⠁⠀⠀⠀⠈⣧⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠔⠋⠹⣷⠀⠀⣹⣿⣿⣿⣿⠧⠴⠒⠒⠒⠒⠒⠒⠒⠦⣄⡀⠀⠀⠀⢽⣄⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣔⣞⠉⣀⣀⣀⡤⠛⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠣⡀⠀⠈⢿⣆⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣶⣿⣿⡿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢲⡋⠉⢧⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢻⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⡀⠘⡆⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠳⡀⢹⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢱⠘⡆⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢦⣜⡦⣄⡀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠃";
+                jugadaSTR += graficos.graficoOtraJugada();
                 break;
         }
         return (jugadaSTR);
@@ -464,6 +286,7 @@ ______________________________|___|/______________________|-|\|_________________
 
     public static void JuegaJugadaDelanteroVsDefensa(Equipos equipo1, Equipos equipo2, Competition competicion)
     {
+        var graficos = new ServicioGrafico();
         //Presiono enter y se juega una jugada aleatoria (de 8 posibilidades de jugada).
         Console.ForegroundColor = ConsoleColor.DarkMagenta;
         Console.WriteLine("\n- Presiona una tecla para jugar la jugada: ");
@@ -499,40 +322,13 @@ ______________________________|___|/______________________|-|\|_________________
         //Si el equipo que ataca tiene mas puntos que el que defiende, sera gol y se sumara un gol al equipo que ataca, si el equipo que defiende tiene mas puntos, no se suman goles. Si tienen igual puntos, quiere decir que el equipo que defiende tiene una posibilidad de hacer gol de contrataque. Si los puntos totales del equipo que defiende son mayores, entonces es gol de contrataque, sino no ocurre nada
         if (ataque > defensa)
         {
-            Console.BackgroundColor = ConsoleColor.Blue;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(@"
-   _____  ____  _      _ _ 
-  / ____|/ __ \| |    | | |
- | |  __| |  | | |    | | |
- | | |_ | |  | | |    | | |
- | |__| | |__| | |____|_|_|
-  \_____|\____/|______(_|_)
-                           
-                           ");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("GOL DEL DELANTERO DE " + equipo1.Nombre() + "\n");
-            Console.ResetColor();
-            equipo1.Goles += 1;
+            GolDelantero(equipo1, graficos);
         }
         else
         {
             if (ataque < defensa)
             {
-                Console.BackgroundColor = ConsoleColor.Red;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(@"
-  _____  ______ ______ ______ _   _  _____         _ _ 
- |  __ \|  ____|  ____|  ____| \ | |/ ____|  /\   | | |
- | |  | | |__  | |__  | |__  |  \| | (___   /  \  | | |
- | |  | |  __| |  __| |  __| | . ` |\___ \ / /\ \ | | |
- | |__| | |____| |    | |____| |\  |____) / ____ \|_|_|
- |_____/|______|_|    |______|_| \_|_____/_/    \_(_|_)
-                                                       
-                                                       ");
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine("No fue gol, gana el defensa");
-                Console.ResetColor();
+                DefensaDefensor(graficos);
 
             }
             else
@@ -541,44 +337,59 @@ ______________________________|___|/______________________|-|\|_________________
                 defensa = equipo1.Delantero.Defensa(efectividad1);
                 if (ataque < defensa)
                 {
-                    Console.BackgroundColor = ConsoleColor.Blue;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(@"
-   _____  ____  _      _ _ 
-  / ____|/ __ \| |    | | |
- | |  __| |  | | |    | | |
- | | |_ | |  | | |    | | |
- | |__| | |__| | |____|_|_|
-  \_____|\____/|______(_|_)
-                           
-                           ");
-                    Console.ForegroundColor = ConsoleColor.Magenta;
-                    Console.WriteLine("GOL DEL DEFENSOR (contrataque)" + equipo2.Nombre() + "\n");
-                    Console.ResetColor();
-
-                    equipo2.Goles += 1;
+                    GolDefensorContrataque(equipo2, graficos);
                 }
                 else
                 {
-                    Console.BackgroundColor = ConsoleColor.Red;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(@"
-  _____  ______ ______ ______ _   _  _____         _ _ 
- |  __ \|  ____|  ____|  ____| \ | |/ ____|  /\   | | |
- | |  | | |__  | |__  | |__  |  \| | (___   /  \  | | |
- | |  | |  __| |  __| |  __| | . ` |\___ \ / /\ \ | | |
- | |__| | |____| |    | |____| |\  |____) / ____ \|_|_|
- |_____/|______|_|    |______|_| \_|_____/_/    \_(_|_)
-                                                       
-                                                       ");
-                    Console.ForegroundColor = ConsoleColor.Magenta;
-                    Console.WriteLine("No fue gol, pero el delantero frena el contrataque");
-                    Console.ResetColor();
+                    DefensaDelanteroContrataque(graficos);
                 }
             }
         }
     }
-    public static void JuegaJugadaMediocampoVsMediocampo(Equipos equipo1, Equipos equipo2, Competition competicion)
+
+    private static void DefensaDelanteroContrataque(ServicioGrafico graficos)
+    {
+        Console.BackgroundColor = ConsoleColor.Red;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine(graficos.escribeDefensa());
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine("No fue gol, pero el delantero frena el contrataque");
+        Console.ResetColor();
+    }
+
+    private static void GolDefensorContrataque(Equipos equipo2, ServicioGrafico graficos)
+    {
+        Console.BackgroundColor = ConsoleColor.Blue;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine(graficos.escribeGol());
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine("GOL DEL DEFENSOR (contrataque)" + equipo2.Nombre() + "\n");
+        Console.ResetColor();
+        equipo2.Goles += 1;
+    }
+
+    private static void DefensaDefensor(ServicioGrafico graficos)
+    {
+        Console.BackgroundColor = ConsoleColor.Red;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine(graficos.escribeDefensa());
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine("No fue gol, gana el defensa");
+        Console.ResetColor();
+    }
+
+    private static void GolDelantero(Equipos equipo1, ServicioGrafico graficos)
+    {
+        Console.BackgroundColor = ConsoleColor.Blue;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine(graficos.escribeGol());
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine("GOL DEL DELANTERO DE " + equipo1.Nombre() + "\n");
+        Console.ResetColor();
+        equipo1.Goles += 1;
+    }
+
+    public static void EnfrentamientoMedioVsMedio(Equipos equipo1, Equipos equipo2, Competition competicion)
     {
         double efectividad1 = equipo1.MejoraLiga(competicion, 50);
         double efectividad2 = equipo2.MejoraLiga(competicion, 50);
@@ -587,30 +398,13 @@ ______________________________|___|/______________________|-|\|_________________
         //Determino quien ataca, que sera el de mas puntos, si tienen igual, ataca el de mas puntos de defensa, tienen igual, no ocurre nada
         if (ataque1 > ataque2)
         {
-            Console.BackgroundColor = ConsoleColor.White;
-            Console.ForegroundColor = ConsoleColor.DarkBlue;
-            Console.WriteLine("\nAtaca el equipo: " + equipo1.Nombre());
-            Console.WriteLine("Ataca: " + equipo1.Mediocampo.Nombre());
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine("Defiende: " + equipo2.Mediocampo.Nombre());
-            Console.ResetColor();
-            //La funcion mediovsMedio se encarga de simular el enfrentamiento entre los 2 mediocampos. En este caso ataca el equipo1 ataca y el 2 defiende. Funciona igual que la delanterovsDefensa, pero como ahora tengo el atributo Mediocampo de equipos en vez de delantero y defensa, creo una funcion diferente
-            MediovsMedio(equipo1, equipo2, competicion);
-
+            JuegaJugadaMediocampoVsMediocampo(equipo1, equipo2, competicion);
         }
         else
         {
             if (ataque2 > ataque1)
             {
-                Console.BackgroundColor = ConsoleColor.White;
-                Console.ForegroundColor = ConsoleColor.DarkBlue;
-                Console.WriteLine("\nAtaca el equipo:  " + equipo2.NombreEquipo);
-                Console.WriteLine("Ataca: " + equipo2.Mediocampo.Nombre());
-                Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine("Defiende: " + equipo1.Mediocampo.Nombre());
-                Console.ResetColor();
-                //Ataca equipo2
-                MediovsMedio(equipo2, equipo1, competicion);
+                JuegaJugadaMediocampoVsMediocampo(equipo2,equipo1,competicion);
             }
             else
             {
@@ -618,28 +412,13 @@ ______________________________|___|/______________________|-|\|_________________
                 double defensa2 = equipo2.Mediocampo.Defensa(efectividad2);
                 if (defensa1 > defensa2)
                 {
-                    Console.BackgroundColor = ConsoleColor.White;
-                    Console.ForegroundColor = ConsoleColor.DarkBlue;
-                    Console.WriteLine("\nAtaca el equipo: " + equipo1.Nombre());
-                    Console.WriteLine("Ataca: " + equipo1.Mediocampo.Nombre());
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("Defiende: " + equipo2.Mediocampo.Nombre());
-                    Console.ResetColor();
-                    MediovsMedio(equipo1, equipo2, competicion);
+                    JuegaJugadaMediocampoVsMediocampo(equipo1,equipo2,competicion);
                 }
                 else
                 {
                     if (defensa2 > defensa1)
                     {
-                        Console.BackgroundColor = ConsoleColor.White;
-                        Console.ForegroundColor = ConsoleColor.DarkBlue;
-                        Console.WriteLine("\nAtaca el equipo:  " + equipo2.NombreEquipo);
-                        Console.WriteLine("Ataca: " + equipo2.Mediocampo.Nombre());
-                        Console.ForegroundColor = ConsoleColor.DarkRed;
-
-                        Console.WriteLine("Defiende: " + equipo1.Mediocampo.Nombre());
-                        Console.ResetColor();
-                        MediovsMedio(equipo2, equipo1, competicion);
+                        JuegaJugadaMediocampoVsMediocampo(equipo2,equipo1,competicion);
                     }
                     else
                     {
@@ -653,8 +432,23 @@ ______________________________|___|/______________________|-|\|_________________
         }
 
     }
+
+    private static void JuegaJugadaMediocampoVsMediocampo(Equipos equipo1, Equipos equipo2, Competition competicion)
+    {
+        Console.BackgroundColor = ConsoleColor.White;
+        Console.ForegroundColor = ConsoleColor.DarkBlue;
+        Console.WriteLine("\nAtaca el equipo: " + equipo1.Nombre());
+        Console.WriteLine("Ataca: " + equipo1.Mediocampo.Nombre());
+        Console.ForegroundColor = ConsoleColor.DarkRed;
+        Console.WriteLine("Defiende: " + equipo2.Mediocampo.Nombre());
+        Console.ResetColor();
+        //La funcion mediovsMedio se encarga de simular el enfrentamiento entre los 2 mediocampos. En este caso ataca el equipo1 ataca y el 2 defiende. Funciona igual que la delanterovsDefensa, pero como ahora tengo el atributo Mediocampo de equipos en vez de delantero y defensa, creo una funcion diferente
+        MediovsMedio(equipo1, equipo2, competicion);
+    }
+
     public static void MediovsMedio(Equipos equipo1, Equipos equipo2, Competition competicion)
     {
+        var graficos = new ServicioGrafico();
         Console.ForegroundColor = ConsoleColor.DarkMagenta;
         Console.WriteLine("\n- Presiona una tecla para jugar la jugada: ");
         string? tecla = Console.ReadLine();
@@ -688,40 +482,13 @@ ______________________________|___|/______________________|-|\|_________________
         //Si tiene mas puntos de ataque, gol del equipo que ataca, si tiene mas puntos el que defiende, no pasa nada (no es gol), si tienen igual, el equipo de defensa puede hacer un gol de contrataque si es que tiene mas puntos de ataque que los puntos de defensa del que defiende
         if (ataque > defensa)
         {
-            Console.BackgroundColor = ConsoleColor.Blue;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(@"
-   _____  ____  _      _ _ 
-  / ____|/ __ \| |    | | |
- | |  __| |  | | |    | | |
- | | |_ | |  | | |    | | |
- | |__| | |__| | |____|_|_|
-  \_____|\____/|______(_|_)
-                           
-                           ");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("GOL DEL DELANTERO DE " + equipo1.Nombre() + "\n");
-            Console.ResetColor();
-            equipo1.Goles += 1;
+            GolDelantero(equipo1,graficos);
         }
         else
         {
             if (ataque < defensa)
             {
-                Console.BackgroundColor = ConsoleColor.Red;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(@"
-  _____  ______ ______ ______ _   _  _____         _ _ 
- |  __ \|  ____|  ____|  ____| \ | |/ ____|  /\   | | |
- | |  | | |__  | |__  | |__  |  \| | (___   /  \  | | |
- | |  | |  __| |  __| |  __| | . ` |\___ \ / /\ \ | | |
- | |__| | |____| |    | |____| |\  |____) / ____ \|_|_|
- |_____/|______|_|    |______|_| \_|_____/_/    \_(_|_)
-                                                       
-                                                       ");
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine("No fue gol, gana el defensa");
-                Console.ResetColor();
+                DefensaDefensor(graficos);
             }
             else
             {
@@ -729,28 +496,11 @@ ______________________________|___|/______________________|-|\|_________________
                 defensa = equipo1.Mediocampo.Defensa(efectividad1);
                 if (ataque < defensa)
                 {
-                    Console.BackgroundColor = ConsoleColor.DarkYellow;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(@"
-   _____  ____  _      _ _ 
-  / ____|/ __ \| |    | | |
- | |  __| |  | | |    | | |
- | | |_ | |  | | |    | | |
- | |__| | |__| | |____|_|_|
-  \_____|\____/|______(_|_)
-                           
-                           ");
-                    Console.ForegroundColor = ConsoleColor.Magenta;
-                    Console.WriteLine("GOL DEL DEFENSOR (contrataque)" + equipo2.Nombre() + "\n");
-                    equipo2.Goles += 1;
-                    Console.ResetColor();
+                    GolDefensorContrataque(equipo2,graficos);
                 }
                 else
                 {
-                    Console.BackgroundColor = ConsoleColor.White;
-                    Console.ForegroundColor = ConsoleColor.Black;
-                    Console.WriteLine("No fue gol, pero el delantero frena el contrataque");
-                    Console.ResetColor();
+                    DefensaDelanteroContrataque(graficos);
                 }
             }
         }
@@ -758,13 +508,14 @@ ______________________________|___|/______________________|-|\|_________________
 
     public static Equipos JuegaPartida(Equipos equipo1, Equipos equipo2)
     {
+        var graficos = new ServicioGrafico();
         //Elijo la competicion en la que se jugara mi partida. Si el area de la competicion coincide con el area de mi equipo, mi equipo tendrá mas posibilidades de ganar (este dato lo saco de la API)
         var buscadorLiga = new PersonajesJSON();
         string? avanzar;
         int factor;
         int aumentaONo;
         Random rand = new Random();
-        var competicion = new Competencias();
+        var competicion = new CompetitionGroup();
         //Obtengo las competencias de la API
         competicion = buscadorLiga.GetCompetencias();
         int cant = competicion.competitions.Count();
@@ -793,15 +544,7 @@ ______________________________|___|/______________________|-|\|_________________
         Console.ResetColor();
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
-        Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+        Console.WriteLine(graficos.escribeSiguienteJugada());
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine("\n\nATACA: " + equipo1.Nombre() + ",\nDEFIENDE: " + equipo2.Nombre());
@@ -810,15 +553,7 @@ ______________________________|___|/______________________|-|\|_________________
         JuegaJugadaDelanteroVsDefensa(equipo1, equipo2, liga);
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
-        Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+        Console.WriteLine(graficos.escribeSiguienteJugada());
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine("\n\nATACA " + equipo2.Nombre() + ", \nDEFIENDE: " + equipo1.Nombre());
@@ -827,15 +562,7 @@ ______________________________|___|/______________________|-|\|_________________
         JuegaJugadaDelanteroVsDefensa(equipo2, equipo1, liga);
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
-        Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+        Console.WriteLine(graficos.escribeSiguienteJugada());
         Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine("\n\nSe enfrentan mediocampos");
         //Enfrentamiento entre los mediocampos de ambos equipos. Primero, se evalua cual de los dos mediocampos (el del equipo1 o 2) tiene mas puntos de ataque. El que tiene mas puntos ataca, el que tiene menos defiende. Si tienen igual, ataca el que mas puntos de defensa tiene, si tienen igual, no ocurre nada.
@@ -844,24 +571,12 @@ ______________________________|___|/______________________|-|\|_________________
         JuegaJugadaMediocampoVsMediocampo(equipo1, equipo2, liga);
         Console.BackgroundColor = ConsoleColor.White;
         Console.ForegroundColor = ConsoleColor.Black;
-        Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+        Console.WriteLine(graficos.escribeSiguienteJugada());
         Console.ResetColor();
         //si el equipo 1 despues de las 3 jugadas iniciales tiene mas goles, es el ganador y  pasa la siguiente ronda
         if (equipo1.GolesMarcados() > equipo2.GolesMarcados())
         {
-            Console.BackgroundColor = ConsoleColor.DarkGreen;
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("\n\t\t--------EQUIPO GANADOR:  " + equipo1.Nombre());
-            Console.WriteLine("RESULTADO FINAL:  " + equipo1.Nombre() + " " + equipo1.GolesMarcados() + "- " + equipo2.Nombre() + " " + equipo2.GolesMarcados());
-            Console.ResetColor();
+            MuestraResultadoFinal(equipo1, equipo2);
             return (equipo1);
         }
         else
@@ -869,11 +584,7 @@ ______________________________|___|/______________________|-|\|_________________
         {
             if (equipo2.GolesMarcados() > equipo1.GolesMarcados())
             {
-                Console.BackgroundColor = ConsoleColor.DarkGreen;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("\n\t\t--------EQUIPO GANADOR:  " + equipo2.Nombre());
-                Console.WriteLine("RESULTADO FINAL:  " + equipo1.Nombre() + " " + equipo1.GolesMarcados() + "- " + equipo2.Nombre() + " " + equipo2.GolesMarcados());
-                Console.ResetColor();
+                MuestraResultadoFinal(equipo1,equipo2);
                 return (equipo2);
             }
             else
@@ -888,108 +599,40 @@ ______________________________|___|/______________________|-|\|_________________
                     Console.WriteLine("Presiona una tecla para dar indicaciones aleatorias al equipo: Si las indicaciones son:\n\tMuy buenas → aumentan en 2 todas las estadisticas de tus jugadores\n\tBuenas →aumentan en 1 todas las estadísticas de tus jugadores\n\tNeutrales, no modifcan el juego de tus jugadores\n\tMalas → Disminuyen 1 las estadisticas de tus jugadores\n\tMuy malas → Disminuyenn 2 puntos las estadisticas de tus jugadores");
                     avanzar = Console.ReadLine();
                     //Determina el factor en que aumentan o disminuyen las estadisticas si lo hacen
-                    factor = rand.Next(1, 3);
-                    // Determina si aumentan, disminuyen o no se modifican las estadisticas (0 no se modifican, 1 aumentan, 2 disminuyen)
-                    aumentaONo = rand.Next(0, 3);
-                    switch (aumentaONo)
-                    {
-                        case 0:
-                            Console.ForegroundColor = ConsoleColor.Black;
-                            Console.WriteLine("No se modifican las estadisticas de tus jugadores");
-                            break;
-                        case 1:
-                            Console.ForegroundColor = ConsoleColor.DarkBlue;
-                            Console.WriteLine("Buenas indicaciones, aumentan las estadisticas de tus jugadores en un factor: " + factor);
-                            //Aumenta Estadisticas es un Metodo de la clase personajes que aumenta las estadisticas de los jugadores 1 0 2 puntos dependiendo del factor
-                            equipo1.AumentaEstadisticas(factor);
-                            break;
-                        case 2:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine("Malas indicaciones, disminuyen las estadisticas de tus jugadores en un factor " + factor);
-                            //Disminuye Estadisticas es un Metodo de la clase personajes que disminuye las estadisticas de los jugadores 1 0 2 puntos dependiendo del factor
-                            equipo1.DisminuyeEstadisticas(factor);
-                            break;
-                        default:
-                            break;
-                    }
+                    ModificaEstadisticas(equipo1, out factor, out aumentaONo, rand);
                     Console.ResetColor();
                     //Mientras sea empate, juego varias veces la jugada
                     Console.BackgroundColor = ConsoleColor.White;
                     Console.ForegroundColor = ConsoleColor.Black;
-                    Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+                    Console.WriteLine(graficos.escribeSiguienteJugada());
                     Console.ResetColor();
                     JuegaJugadaDelanteroVsDefensa(equipo1, equipo2, liga);
                     Console.BackgroundColor = ConsoleColor.White;
                     Console.ForegroundColor = ConsoleColor.Black;
-                    Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+                    Console.WriteLine(graficos.escribeSiguienteJugada());
                     Console.ResetColor();
                     JuegaJugadaDelanteroVsDefensa(equipo2, equipo1, liga);
                     Console.BackgroundColor = ConsoleColor.White;
                     Console.ForegroundColor = ConsoleColor.Black;
-                    Console.WriteLine(@"
-   _____ _____ _____ _    _ _____ ______ _   _ _______ ______        _ _    _  _____          _____          
-  / ____|_   _/ ____| |  | |_   _|  ____| \ | |__   __|  ____|      | | |  | |/ ____|   /\   |  __ \   /\    
- | (___   | || |  __| |  | | | | | |__  |  \| |  | |  | |__         | | |  | | |  __   /  \  | |  | | /  \   
-  \___ \  | || | |_ | |  | | | | |  __| | . ` |  | |  |  __|    _   | | |  | | | |_ | / /\ \ | |  | |/ /\ \  
-  ____) |_| || |__| | |__| |_| |_| |____| |\  |  | |  | |____  | |__| | |__| | |__| |/ ____ \| |__| / ____ \ 
- |_____/|_____\_____|\____/|_____|______|_| \_|  |_|  |______|  \____/ \____/ \_____/_/    \_\_____/_/    \_\
-                                                                                                             
-                                                                                                             ");
+                    Console.WriteLine(graficos.escribeSiguienteJugada());
                     Console.ResetColor();
                     JuegaJugadaMediocampoVsMediocampo(equipo1, equipo2, liga);
-                    switch (aumentaONo)
-                    {
-                        case 0:
-                            break;
-                        case 1:
-                            equipo1.DisminuyeEstadisticas(factor);
-                            break;
-                        case 2:
-                            equipo2.AumentaEstadisticas(factor);
-                            break;
-                        default:
-                            break;
-                    }
                 }
                 //Si los goles marcados son mayores que los del otro equipo, quiere decir que gane, sino perdi
                 if (equipo1.GolesMarcados() > equipo2.GolesMarcados())
                 {
-                    Console.BackgroundColor=ConsoleColor.White;
-                    Console.ForegroundColor=ConsoleColor.DarkYellow;
-                    Console.WriteLine(@"
-   _____              _   _               _____   _______   ______   _   _ 
-  / ____|     /\     | \ | |     /\      / ____| |__   __| |  ____| | | | |
- | |  __     /  \    |  \| |    /  \    | (___      | |    | |__    | | | |
- | | |_ |   / /\ \   | . ` |   / /\ \    \___ \     | |    |  __|   | | | |
- | |__| |  / ____ \  | |\  |  / ____ \   ____) |    | |    | |____  |_| |_|
-  \_____| /_/    \_\ |_| \_| /_/    \_\ |_____/     |_|    |______| (_) (_)
-                                                                           
-                                                                          ");
-                                                                          Console.BackgroundColor=ConsoleColor.Black;
-                    Console.WriteLine("\n\t\t--------EQUIPO GANADOR:  " + equipo1.Nombre());
-                    Console.WriteLine("RESULTADO FINAL:  " + equipo1.Nombre() + " " + equipo1.GolesMarcados() + "- " + equipo2.Nombre() + " " + equipo2.GolesMarcados());
+                    Console.BackgroundColor = ConsoleColor.White;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.WriteLine(graficos.escribeGanaste());
+                    Console.ResetColor();
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    MuestraResultadoFinal(equipo1,equipo2);
                     return (equipo1);
                 }
                 else
                 {
-                    Console.BackgroundColor=ConsoleColor.Black;
-                    Console.ForegroundColor=ConsoleColor.Red;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("\n\t\t--------EQUIPO GANADOR:  " + equipo2.Nombre());
                     Console.WriteLine("RESULTADO FINAL:  " + equipo1.Nombre() + " " + equipo1.GolesMarcados() + "- " + equipo2.Nombre() + " " + equipo2.GolesMarcados());
                     return (equipo2);
@@ -1001,5 +644,40 @@ ______________________________|___|/______________________|-|\|_________________
 
     }
 
+    private static void ModificaEstadisticas(Equipos equipo1, out int factor, out int aumentaONo, Random rand)
+    {
+        factor = rand.Next(1, 3);
+        // Determina si aumentan, disminuyen o no se modifican las estadisticas (0 no se modifican, 1 aumentan, 2 disminuyen)
+        aumentaONo = rand.Next(0, 3);
+        switch (aumentaONo)
+        {
+            case 0:
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine("No se modifican las estadisticas de tus jugadores");
+                break;
+            case 1:
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.WriteLine("Buenas indicaciones, aumentan las estadisticas de tus jugadores en un factor: " + factor);
+                //Aumenta Estadisticas es un Metodo de la clase personajes que aumenta las estadisticas de los jugadores 1 0 2 puntos dependiendo del factor
+                equipo1.AumentaEstadisticas(factor);
+                break;
+            case 2:
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Malas indicaciones, disminuyen las estadisticas de tus jugadores en un factor " + factor);
+                //Disminuye Estadisticas es un Metodo de la clase personajes que disminuye las estadisticas de los jugadores 1 0 2 puntos dependiendo del factor
+                equipo1.DisminuyeEstadisticas(factor);
+                break;
+            default:
+                break;
+        }
+    }
 
+    private static void MuestraResultadoFinal(Equipos equipo1, Equipos equipo2)
+    {
+        Console.BackgroundColor = ConsoleColor.DarkGreen;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("\n\t\t--------EQUIPO GANADOR:  " + equipo1.Nombre());
+        Console.WriteLine("RESULTADO FINAL:  " + equipo1.Nombre() + " " + equipo1.GolesMarcados() + "- " + equipo2.Nombre() + " " + equipo2.GolesMarcados());
+        Console.ResetColor();
+    }
 }
